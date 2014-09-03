@@ -2606,7 +2606,7 @@ CMS   was on a December day two years into a run in which a day with
 CMS   snow was followed by one without.  SFLX>SNWPAC followed by
 CMS   SFLX>NOPAC
 CMS --------------------------------------------------------------------
-      IF ( ETP .LE. 0.1 ) THEN
+      IF ( ETP .LE. 0.0 ) THEN
         BETA = 0.0
         IF ( ETP .LT. 0.0 ) THEN
           BETA = 1.0
