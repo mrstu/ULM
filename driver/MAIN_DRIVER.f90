@@ -506,6 +506,14 @@ PROGRAM noah
                   SOILMOIST_total_band = SOILMOIST_total_band + SMC(I,J,K)*SOILDEPTH(I,K)*1000.0
                END DO
                SOILMOIST_save_band = SOILMOIST_total_band
+
+               ! ADDED (MRS 20140613): snow scraping
+               if (month .EQ. 9 .AND. day .EQ. 1) then
+                  SNEQV(I,J)=0.
+                  PACH20(I,J)=0.
+               endif
+               ! END ADDED
+
                SWE_band = SNEQV(I,J)*1000.0
 !               if (SNEQV(I,J)>0.) then
 !                  write(*,*)'swe',SNEQV(I,J),'i',i,'month',month
@@ -552,7 +560,7 @@ PROGRAM noah
                else
                   prflag = 0
                endif
-               
+               ! prflag = 1
                !           write(*,*)'t1before',T1(I,J),TPACK(I,J),DT_TAIR_band
                
                !########### Be sure to convert all moisture fluxes to M for SFLX
@@ -679,11 +687,12 @@ PROGRAM noah
                temp13 = CMC_total_band - CMC_save_band
                
                wb_error = temp1 - temp2 - temp3 - temp8*SNCOVR(I,J) - temp9 - temp13
-               if (wb_error*wb_error > 0.1) then
-                  write(*,*)'###cell wb_error',I,wb_error,SWE_band,SNCOVR(I,J)
-                  write(*,*)'prcp',temp1,'evap',temp2,'runoff',temp3
-                  write(*,*)'delswe',temp8*SNCOVR(I,J),'delsm',temp9,'delcmc',temp13
-               endif
+               ! Ben had this at 0.1... lots of times that is exceeded and log file gets too big so increased to 0.5 threshold.
+!               if (wb_error*wb_error > 0.5) then
+!                  write(*,*)'###cell wb_error',I,wb_error,SWE_band,SNCOVR(I,J)
+!                  write(*,*)'prcp',temp1,'evap',temp2,'runoff',temp3
+!                  write(*,*)'delswe',temp8*SNCOVR(I,J),'delsm',temp9,'delcmc',temp13
+!               endif
                
                if (abs(wb_error)>WB_ERROR_TOL*MODEL_DT_REAL/(24*3600)) then
                   !            if (I == 2) then

@@ -135,6 +135,7 @@ MODULE driverMod
   REAL, ALLOCATABLE    :: LAT(:,:)     ! Grid cell latitude (indexed by y,x)
   REAL, ALLOCATABLE    :: LON(:,:)     ! Grid cell longitude (indexed by y,x)
   INTEGER, ALLOCATABLE :: CELLID(:,:)  ! Cell ID number (indexed by y,x)
+  ! TODO: remove snow band dependency on cell id (see MAIN_DRIVER>READ_SNOWBANDS.f90() and READ_LSC.f90())
   INTEGER, ALLOCATABLE :: LANDMASK(:,:)! 1=Land/InBasin, 0=Ocean/OutOfBasin (indexed by y,x)
   INTEGER, ALLOCATABLE :: Y(:),X(:)    ! Y and X values of active (Land/InBasin) grid cells (indexed by cell id)
   INTEGER, ALLOCATABLE :: LAND(:)      ! List of (Y*ylen+X) values of active (Land/InBasin)

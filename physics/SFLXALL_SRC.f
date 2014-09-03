@@ -730,10 +730,10 @@ C ----------------------------------------------------------------------
       T1V = T1 * (1.0 + 0.61 * Q2)
       TH2V = TH2 * (1.0 + 0.61 * Q2)
 
-C ----------------------------------------------------------------------
-C ADDED: MATT STUMBAUGH 2014-06-06
-C SET WIND SPEEDS BELOW 1 M/S THRESHOLD TO 1 M/S.
-C ----------------------------------------------------------------------
+CMS --------------------------------------------------------------------
+CMS ADDED: MATT STUMBAUGH 2014-06-06
+CMS SET WIND SPEEDS BELOW 1 M/S THRESHOLD TO 1 M/S.
+CMS --------------------------------------------------------------------
       IF (SFCSPD .LT. 1.) THEN
          SFCSPD=1.
       ENDIF
@@ -938,18 +938,25 @@ CBL both snow covered and snow-free cases at once (e.g. * 1000)
       ETT = (ETT * 1000) * LVH2O
 CBL multiply by the 'L' that was used to obtain ESNOW
       IF (LVRAIN .EQ. .TRUE.) THEN
+CMS        write(*,*)'LVRAN-TRUE'
          ESNOW = (ESNOW * 1000) * LVH2O
       ELSE
+CMS        write(*,*)'LVRAN-FALSE'
          ESNOW = (ESNOW * 1000) * LSUBS
       ENDIF
 CBL      ETP = ETP*((1.-SNCOVR)*LVH2O + SNCOVR*LSUBS)
       ETP = ETP*LVH2O
       IF (ETP .GT. 0.) THEN
+CMS        write(*,*)'ETP-GT0'
         ETA = EDIR + EC + ETT + ESNOW
       ELSE
+CMS        write(*,*)'ETP-LT0'
         ETA = ETP * (1 - SNCOVR) + ESNOW
       ENDIF
       BETA = ETA/ETP
+CMS
+CMS      write(*,*)'eta ',ETA,' etp ',ETP,' beta ',BETA
+
       if (prflag==1) then
       write(*,*)'sflxlv edir ec ett esnow eta etp'
       write(*,*)edir,ec,ett,esnow,eta,etp
@@ -1743,11 +1750,14 @@ C ----------------------------------------------------------------------
 C ----------------------------------------------------------------------
 C  IF TEMPERATURE NOT SIGNIFICANTLY BELOW FREEZING (T0), SH2O = SMC
 C ----------------------------------------------------------------------
+
       IF (TKELV .GT. (T0 - 1.E-3)) THEN
  	FRH2O = SMC
       ELSE
-        IF (CK .NE. 0.0) THEN
+C      write(*,*)'TKELV',TKELV
 
+        IF (CK .NE. 0.0) THEN
+CMS      write(*,*)'option 1','NLOG:',NLOG,'TKELV',TKELV
 C ----------------------------------------------------------------------
 C OPTION 1: ITERATED SOLUTION FOR NONZERO CK
 C IN KOREN ET AL, JGR, 1999, EQN 17
@@ -1960,6 +1970,13 @@ C LATER IN FUNCTION SUBROUTINE SNKSRC
 C ----------------------------------------------------------------------
       IF (ITAVG) THEN 
         TSURF = (YY + (ZZ1-1) * STC(1)) / ZZ1
+        IF (TSURF .LT. 0.) THEN
+          write(*,*)'TSURF',TSURF
+          write(*,*)'YY',YY
+          write(*,*)'ZZ1',ZZ1
+          write(*,*)'STC',STC(1)
+        ENDIF
+
         CALL TBND (STC(1),STC(2),ZSOIL,ZBOT,1,NSOIL,TBK)
       ENDIF
 
@@ -2577,7 +2594,19 @@ C ----------------------------------------------------------------------
 CBL use ETA0 insteat of ETA1 to keep units straight
 
       ETA0 = ETA1 * 1000
-      IF ( ETP .LE. 0.0 ) THEN
+CMS --------------------------------------------------------------------
+CMS   ADDED: MATT STUMBAUGH 2014-06-18
+CMS      IF ( ETP .LE. 0.0 ) THEN
+CMS   I increased 0.0 to 0.1 in order to trap
+CMS   very small (non-negative) ETPs that yield huge beta, due to
+CMS   being accompanied by large ETA, and result in sub-zero-Kelvin
+CMS   surface temperatures and cascading problems.  It is unclear
+CMS   why Ben put in the original trap.  The first occurrence
+CMS   was on a December day two years into a run in which a day with
+CMS   snow was followed by one without.  SFLX>SNWPAC followed by
+CMS   SFLX>NOPAC
+CMS --------------------------------------------------------------------
+      IF ( ETP .LE. 0.1 ) THEN
         BETA = 0.0
         IF ( ETP .LT. 0.0 ) THEN
           BETA = 1.0
@@ -2586,7 +2615,10 @@ c          ETA = ETP
       ELSE
 CBL        BETA = ETA / ETP
 CBL use ETA0 instead
-         BETA = ETA0 / ETP
+CMS        write(*,*)'nopac beta eta etp',beta,eta0,etp
+        BETA = ETA0 / ETP
+CMS        write(*,*)'nopac beta eta etp',beta,eta0,etp
+
       ENDIF
       if (prflag==1) then
       write(*,*)'nopac beta eta etp',beta,eta,etp
@@ -2614,6 +2646,17 @@ C SHFLX BELOW) FOR USE IN COMPUTING SUBSURFACE HEAT FLUX IN HRT
 C ----------------------------------------------------------------------
       YYNUM = FDOWN - EMISS*SIGMA * T24
       YY = SFCTMP + (YYNUM/RCH+TH2-SFCTMP-BETA*EPSCA) / RR
+C      IF (SFCTMP .LT. 273.15) THEN
+C      write(*,*)'YYNUM',YYNUM
+C      write(*,*)'RCH',RCH
+C      write(*,*)'TH2',TH2
+C      write(*,*)'BETA',BETA
+C      write(*,*)'EPSCA',EPSCA
+C      write(*,*)'RR',RR
+C      write(*,*)'SFCTMP',SFCTMP
+C      write(*,*)'YYo',YY
+C      ENDIF
+
 c      write(*,*)'nopac above shflx'
 c      write(*,*)'yy sfctmp yynum rch th2 beta epsca rr'
 c      write(*,*)yy,sfctmp,yynum,rch,th2,beta,epsca,rr
@@ -5311,6 +5354,13 @@ C SKIN TEMP VALUE AS REVISED BY SHFLX.
 C ----------------------------------------------------------------------
       ZZ1 = 1.0
       YY = STC(1)-0.5*SSOIL*ZSOIL(1)*ZZ1/DF1
+C      IF (YY .LT. -1000.) THEN
+C      write(*,*)'YY',YY
+C      write(*,*)'SSOIL',SSOIL
+C      write(*,*)'ZSOIL',ZSOIL
+C      write(*,*)'ZZ1',ZZ1
+C      write(*,*)'DF1',DF1
+C      ENDIF
       T11 = T1
 
 C ----------------------------------------------------------------------
@@ -6075,6 +6125,14 @@ C     Test Denoth estimate of irreducible saturation = 4% of pore volume
 cbl Special thanks to Rick Steed
          ZZ1 = 1.0
          YY = STC(1)-0.5*SSOIL*ZSOIL(1)*ZZ1/DF1
+C        IF (YY .LT. 0.) THEN
+C          write(*,*)'YY',YY
+C          write(*,*)'STC',STC(1)
+C          write(*,*)'SSOIL',SSOIL
+C          write(*,*)'ZSOIL',ZSOIL
+C          write(*,*)'ZZ1',ZZ1
+C        ENDIF
+
          CALL SNOWPACK (ESD,DT,SNOWH,SNDENS,T1,YY)
          FRCH20 = IRRSAT*((1 - SNDENS/0.9)/SNDENS)
 C     FRCH20 = 0.04
@@ -6246,6 +6304,13 @@ C SKIN TEMP VALUE AS REVISED BY SHFLX.
 C ----------------------------------------------------------------------
       ZZ1 = 1.0
       YY = STC(1)-0.5*SSOIL*ZSOIL(1)*ZZ1/DF1
+C      IF (YY .LT. -1000.) THEN
+C      write(*,*)'YY',YY
+C      write(*,*)'SSOIL',SSOIL
+C      write(*,*)'ZSOIL',ZSOIL
+C      write(*,*)'ZZ1',ZZ1
+C      write(*,*)'DF1',DF1
+C      ENDIF
       T11 = T12
       if(prflag==1)write(*,*)'ssoil0',ssoil,esnow2,seh,yy
 
@@ -7574,7 +7639,7 @@ C ----------------------------------------------------------------------
       REAL XUP
       REAL ZSOIL (NSOIL)
 
-      PARAMETER(T0 = 2.7315E2)
+      PARAMETER(T0 = 273.15)
 
 C ----------------------------------------------------------------------
       IF (K .EQ. 1) THEN
@@ -7645,6 +7710,12 @@ C ----------------------------------------------------------------------
             TAVG = (TUP + 2.0*TM + TDN) / 4.0
           ENDIF
         ENDIF
+      ENDIF
+      IF (TAVG .LT. 0.) THEN
+          write(*,*)'TAVG',TAVG
+          write(*,*)'TUP',TUP
+          write(*,*)'TM',TM
+          write(*,*)'TDN',TDN
       ENDIF
 C ----------------------------------------------------------------------
 C END SUBROUTINE TMPAVG
