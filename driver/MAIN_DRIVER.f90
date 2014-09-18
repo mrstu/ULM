@@ -5,19 +5,19 @@ PROGRAM noah
   ! author: Ted Bohn, tbohn@hydro.washington.edu
 
   ! Modifications:
-  ! 2007-Nov-06 Fixed reporting of SnowT and added SnowSoilT.		Ben Livneh
-  ! 2007-Nov-06 Fixed reporting of SoilMoist.				TJB
-  ! 2007-Nov-12 Moved computation of SOLNET to inside SFLX.		TJB
+  ! 2007-Nov-06 Fixed reporting of SnowT and added SnowSoilT.       Ben Livneh
+  ! 2007-Nov-06 Fixed reporting of SoilMoist.               TJB
+  ! 2007-Nov-12 Moved computation of SOLNET to inside SFLX.     TJB
   ! 2007-Nov-12 Added LSTSNW and day_of_year to SFLX call, for new
-  !             snow albedo computation scheme.				Ben Livneh and TJB
-  ! 2007-Nov-15 Fixed reporting of output record times.			TJB
-  ! 2007-Dec-05 Improved looping over forcing, output files.		TJB
+  !             snow albedo computation scheme.             Ben Livneh and TJB
+  ! 2007-Nov-15 Fixed reporting of output record times.         TJB
+  ! 2007-Dec-05 Improved looping over forcing, output files.        TJB
   ! 2008-May-05 Removed T12, LADJCH, and FFROZP, and removed day_of_year
-  !             from SFLX call, for compatibility with NOAH 2.8.	Ben Livneh
+  !             from SFLX call, for compatibility with NOAH 2.8.    Ben Livneh
   ! 2008-Jul-24 Added PackWater to track liquid water within snow       Ben Livneh
-  ! 2008-Jul-24 Added SliqFrac and SnowTProf				Ben Livneh
+  ! 2008-Jul-24 Added SliqFrac and SnowTProf                Ben Livneh
   ! 2008-Aug-12 Added error_flag to alert bounding errors in SFLX
-  !             SNWPAC iterative temperature solver			Ben Livneh
+  !             SNWPAC iterative temperature solver         Ben Livneh
   ! 2008-Oct-07 Included SAC parameters for use as unified model         Ben Livneh
   ! 2010-Jan-06 Did a bunch of consistency checks between driver and sflx, units, wb components
 
@@ -382,7 +382,8 @@ PROGRAM noah
       wb_sum = 0.0
 !      write(*,*)'day of year',day_of_year
 !$OMP PARALLEL DO
-      DO I = 1,landlen
+!      DO I = 1,landlen
+      DO I = 12,12
 !  Start debugging conditional
 !       IF (I==190) THEN
 !         IF (I==1 .or. MOD(I,32) == 0) THEN
@@ -549,7 +550,7 @@ PROGRAM noah
                !            SOILMOIST_total_band = UZTWC+UZFWC+LZTWC+LZFSC+LZFPC
                !            SOILMOIST_save_band = SOILMOIST_total_band
                
-               if (i==-1) then
+               if (i==12) then
 !                  prflag = 1
 !                  write(*,*)'cell',i
                                  write(*,*) '0.SMC:',(SMC(I,J,K),K=1,4)
@@ -568,8 +569,25 @@ PROGRAM noah
                ! CALL LAND-SURFACE PHYSICS
                
                ! Appended call for TPACK(I,J) - Ben Livneh Nov 2007
-               !            write(*,*)'above sflx','NSNOW(I,J)',NSNOW(I,J),'MODEL_TYPE',MODEL_TYPE
-               !            write(*,*)'prcp',DT_PRCP_band,'stc',STC(I,J,:)
+               write(*,*)'above sflx','NSNOW(I,J)',NSNOW(I,J),'MODEL_TYPE',MODEL_TYPE
+               ! write(*,*)'prcp',DT_PRCP_band,'stc',STC(I,J,:)
+               ! write(*,*)'before ',I,J,SMC(I,J,:),STC(I,J,:)
+
+                  write(*,*)'date:',year,month,day,hour
+                  write(*,*)'cell',I,'band',J,'wb error',wb_error,'mm, over model time step of',MODEL_DT_REAL,'sec'
+                  write(*,*)'FORCING STEP',FORCING_STEP,'MODEL STEP',MODEL_STEP,'MODEL STEP COUNT',MODEL_STEP_COUNT,'OUTPUT STEP',OUTPUT_STEP
+                  write(*,*)
+                  write(*,*)'WB terms (mm) for this band and model step:'
+                  write(*,*)'RAIN',RAIN_band*MODEL_DT_REAL,'SNOW',SNOW_band*MODEL_DT_REAL,'EVAP',EVAP_band*MODEL_DT_REAL
+                  write(*,*)'RUNOFF1',RUNOFF1_band*MODEL_DT_REAL,'RUNOFF2',RUNOFF2_band*MODEL_DT_REAL,'RUNOFF3',RUNOFF3_band*MODEL_DT_REAL
+                  write(*,*)'SWE_band',SWE_band,'SWE_save_band',SWE_save_band,'SOILMOIST_total_band',SOILMOIST_total_band,'SOILMOIST_old',SOILMOIST_save_band
+                  write(*,*)
+                  write(*,*)'Soil Moisture'
+                  DO K = 1, NSOIL(I)
+                     WRITE(*,*)'SMC(I,J,K)*SOILDEPTH(I,K)*1000.0',SMC(I,J,K),SOILDEPTH(I,K),(SMC(I,J,K)*SOILDEPTH(I,K)*1000)
+                  END DO
+
+
                if (prflag == 1) then
                write(*,*)'cell id',I,'model step',MODEL_STEP_COUNT,'month',month,'day',day
                endif
@@ -604,7 +622,7 @@ PROGRAM noah
                     FX,SOILW_band,SOILM_band,RGL,HS,error_flag,prflag,I,MODEL_STEP_COUNT, &
                     W_WILT(I),SMCDRY(I),SMCREF(I),W_SAT(I),NROOT(I),CZMODEL,LSTSNW(I,J),MODEL_TYPE,lvrain,WCRIT,PSNOW1,PSNOW2,RICHARDS)
                
-
+               ! write(*,*)'after ',I,J,SMC(I,J,:),STC(I,J,:)
                if (I == 9999) then
                   write(*,*)'below sflx'
                   write(*,*)'cell',I,'band',J,'DT_PRCP_band',DT_PRCP_band,'DT_TAIR_band',DT_TAIR_band,'SNEQV',SNEQV(I,J)
@@ -694,14 +712,16 @@ PROGRAM noah
 !                  write(*,*)'delswe',temp8*SNCOVR(I,J),'delsm',temp9,'delcmc',temp13
 !               endif
                
-               if (abs(wb_error)>WB_ERROR_TOL*MODEL_DT_REAL/(24*3600)) then
+!               if (abs(wb_error)>WB_ERROR_TOL*MODEL_DT_REAL/(24*3600)) then
                   !            if (I == 2) then
                   write(*,*)'below sflx'
                   write(*,*)
+                  write(*,*)'date:',year,month,day,hour
                   write(*,*)'cell',I,'band',J,'wb error',wb_error,'mm, over model time step of',MODEL_DT_REAL,'sec'
                   write(*,*)'FORCING STEP',FORCING_STEP,'MODEL STEP',MODEL_STEP,'MODEL STEP COUNT',MODEL_STEP_COUNT,'OUTPUT STEP',OUTPUT_STEP
                   write(*,*)
                   write(*,*)'WB terms (mm) for this band and model step:'
+                  write(*,*)EC1_band*MODEL_DT_REAL, EDIR1_band*MODEL_DT_REAL, ETT1_band*MODEL_DT_REAL, ESNOW_band*MODEL_DT_REAL
                   write(*,*)'RAIN',RAIN_band*MODEL_DT_REAL,'SNOW',SNOW_band*MODEL_DT_REAL,'EVAP',EVAP_band*MODEL_DT_REAL
                   write(*,*)'RUNOFF1',RUNOFF1_band*MODEL_DT_REAL,'RUNOFF2',RUNOFF2_band*MODEL_DT_REAL,'RUNOFF3',RUNOFF3_band*MODEL_DT_REAL
                   write(*,*)'SWE_band',SWE_band,'SWE_save_band',SWE_save_band,'SOILMOIST_total_band',SOILMOIST_total_band,'SOILMOIST_old',SOILMOIST_save_band
@@ -710,7 +730,7 @@ PROGRAM noah
                   DO K = 1, NSOIL(I)
                      WRITE(*,*)'SMC(I,J,K)*SOILDEPTH(I,K)*1000.0',SMC(I,J,K),SOILDEPTH(I,K),(SMC(I,J,K)*SOILDEPTH(I,K)*1000)
                   END DO
-               end if
+!               end if
                
                ! Calculate freeze/thaw depths
                Fdepth_band = 0.0

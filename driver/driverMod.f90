@@ -25,8 +25,8 @@ MODULE driverMod
 !  include '/usr/local/i386/include/netcdf.inc'
 !  include '$INC_NETCDF/netcdf.inc'
 !  include '/usr/include/netcdf-3/netcdf.inc'
-!  include '/usr/include/netcdf.inc'
-  include '/sw/netcdf-fortran-4.2_icc-14.0.2_rh6/include/netcdf.inc'
+  include '/usr/include/netcdf.inc'
+!  include '/sw/netcdf-fortran-4.2_icc-14.0.2_rh6/include/netcdf.inc'
 
   ! Model constants
   REAL, PARAMETER :: TFREEZ=273.15
