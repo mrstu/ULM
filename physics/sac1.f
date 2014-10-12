@@ -2,12 +2,14 @@
 C     SAC FROZEN GROUND VARIABLES
      &                IFRZE,TA,LWE,WE,ISC,AESC,
 C     SAC PARAMETERS
-     &     SACPAR,SACST)
+     &                UZTWM,UZFWM,UZK,PCTIM,ADIMP,RIVA,ZPERC,
+     &                REXP,LZTWM,LZFSM,LZFPM,LZSK,LZPK,PFREE,
+     &                SIDE,RSERV,
+C     SAC State variables  ',
+     &                UZTWC,UZFWC,LZTWC,LZFSC,LZFPC,ADIMC)
 
 
-
-
-C      IMPLICIT NONE
+      IMPLICIT NONE
 
 C.......................................
 C     THIS SUBROUTINE EXECUTES THE 'SAC-SMA ' OPERATION FOR ONE TIME
@@ -31,12 +33,52 @@ C     RCS Id string, for version control
       REAL TA,LWE,WE,AESC  
 
       REAL LZTWM,LZFSM,LZFPM,LZSK,LZPK,LZTWC,LZFSC,LZFPC
-      REAL SACPAR(*),SACST(*)
 
+cbl2014 define the common block variables and initialize them 
+cbl2014 assume zero is correct?
+      real UZTWM,UZFWM,UZK,PCTIM,ADIMP,RIVA,ZPERC,REXP
+      real FGCO(6),RSUM(7),PPE,PSC,PTA,PWE
+      real SROT,SIMPVT,SRODT,SROST,SINTFT,SGWFP,SGWFS,SRECHT
+      real SETT,SE1,SE3,SE4,SE5
+cbl2014 define those variables that were previously undefined
+cbl2014 due to the previous commenting out of "IMPLICIT NONE"
+cbl2014 
+      real pfree,side,rserv,uztwc,utfwc,adimc,eused,se2,edmnd,red
+      real e1,uzrat,e3,ratlzt,saved,ratlz,del,e5,twx,sbf,sperc,spbf
+      real dinc,uzfwc,e2,pinc,duz,dlzp,dlzs,parea,adsur,ratio,addro
+      real bf,percm,perc,defr,fr,fi,uzdefr,check,perct,percf,hpl,ratlp
+      real ratls,fracp,percp,percs,excess,sur,tbf,bfcc,bfncc,e4
+      integer ninc,i
 C     COMMON BLOCKS
-      COMMON/FSMCO1/FGCO(6),RSUM(7),PPE,PSC,PTA,PWE
-      COMMON/FSUMS1/SROT,SIMPVT,SRODT,SROST,SINTFT,SGWFP,SGWFS,SRECHT,
-     1              SETT,SE1,SE3,SE4,SE5
+cbl2014      COMMON/FSMCO1/FGCO(6),RSUM(7),PPE,PSC,PTA,PWE
+cbl2014      COMMON/FSUMS1/SROT,SIMPVT,SRODT,SROST,SINTFT,SGWFP,SGWFS,SRECHT,
+cbl2014     1              SETT,SE1,SE3,SE4,SE5
+
+cbl2014 initialize these variables since common block unitialized
+cbl2014 Q: also initialize them in the othe rsubroutines?
+      RSUM(1)=0.
+      RSUM(2)=0.
+      RSUM(3)=0.
+      RSUM(4)=0.
+      RSUM(5)=0.
+      RSUM(6)=0.
+      RSUM(7)=0.
+      SROT=0.
+      SIMPVT=0.
+      SRODT=0.
+      SROST=0.
+      SRECHT=0.
+      SGWFS=0.
+      SGWFP=0.
+      SINTFT=0.
+      EUSED=0.
+      TET=0.
+      SETT=0.
+      SE1=0.
+      SE2=0.
+      SE3=0.
+      SE4=0.
+      SE5=0.
 
 
 C      write(*,*) 'pars - ',UZTWM,UZFWM,UZK,PCTIM,ADIMP,RIVA,ZPERC,REXP,
@@ -49,25 +91,6 @@ C      write(*,*) '           - ET ', E1,E2,E3,E4,E5,TET
 C.......................................
 C     COMPUTE EVAPOTRANSPIRATION LOSS FOR THE TIME INTERVAL.
 C        EDMND IS THE ET-DEMAND FOR THE TIME INTERVAL
-
-      IFRZE=0
-      UZTWM=SACPAR(1)
-      UZFWM=SACPAR(2)
-      ADIMP=SACPAR(5)
-      LZTWM=SACPAR(9)
-      LZFSM=SACPAR(10)
-      LZFPM=SACPAR(11)
-      PAREA=1.0-SACPAR(4)-ADIMP
-C      IF(IVERS .NE. 0) CKSL=FRZPAR(4)
-
-c define states from the array
-      UZTWC=SACST(1)
-      UZFWC=SACST(2)
-      LZTWC=SACST(3)
-      LZFSC=SACST(4)
-      LZFPC=SACST(5)
-      ADIMC=SACST(6)
-
       EDMND=EP
 C
 C     COMPUTE ET FROM UPPER ZONE.
@@ -348,10 +371,6 @@ C     ADD TO MONTHLY SUMS.
 C
 C     COMPUTE TOTAL CHANNEL INFLOW FOR THE TIME INTERVAL.
       TCI=ROIMP+SDRO+SSUR+SIF+BFCC
-      write(*,*)'total channel inflow'
-      write(*,*)'TCI',TCI,'ROIMP',ROIMP
-      write(*,*)'SDRO',SDRO,'SSUR',SSUR
-      write(*,*)'SIF',SIF,'BFCC',BFCC
 C
 C     COMPUTE E4-ET FROM RIPARIAN VEGETATION.
       E4=(EDMND-EUSED)*RIVA
@@ -373,14 +392,6 @@ C     COMPUTE TOTAL EVAPOTRANSPIRATION-TET
       SE5=SE5+E5
 C     CHECK THAT ADIMC.GE.UZTWC
       IF (ADIMC.LT.UZTWC) ADIMC=UZTWC
-
-c  Return back SAC states
-      SACST(1)=UZTWC
-      SACST(2)=UZFWC      
-      SACST(3)=LZTWC
-      SACST(4)=LZFSC
-      SACST(5)=LZFPC
-      SACST(6)=ADIMC
 
 C      write(*,*) 'end sac1 - states ', UZTWC,UZFWC,LZTWC,LZFSC,LZFPC,
 C     &           ADIMC
@@ -466,6 +477,9 @@ C     COMMON BLOCKS
       COMMON/SACSTAT1/UZTWC,UZFWC,LZTWC,LZFSC,LZFPC,ADIMC
       COMMON/FSMCO1/FGCO(6),RSUM(7),PPE,PSC,PTA,PWE
       COMMON/FPMFG1/FGPM(10)
+
+
+      
 C.......................................
 C     INITIAL VALUES
       FINDX=FGCO(1)

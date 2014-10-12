@@ -43,6 +43,7 @@ OBJS =  obj/driverMod.o \
 	obj/CLOSE_OUTPUT.o \
 	obj/CLOSE_FORCING.o \
 	obj/fland2.o \
+	obj/fland4.o \
 	obj/fst2sac1.o \
 	obj/fst2sac2.o \
 	obj/sac2frz1.o \
@@ -232,6 +233,9 @@ obj/sac1.o: physics/sac1.f
 
 obj/fland2.o: physics/fland2.f
 	$(COMPILER) $(FFLAGS) physics/fland2.f -o obj/fland2.o
+
+obj/fland4.o: physics/fland4.f
+	$(COMPILER) $(FFLAGS) physics/fland4.f -o obj/fland4.o
 
 obj/fst2sac1.o: physics/fst2sac1.f
 	$(COMPILER) $(FFLAGS) physics/fst2sac1.f -o obj/fst2sac1.o

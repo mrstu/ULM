@@ -14,13 +14,20 @@ CBL
 CBL Solution: include F1WH in calculation; compare SWH to SLIQ (not SX)
 CBL *note: secondary problem, by resetting SH2O to SWLT, could be 
 CBL affecting the stability of heat flux solution...unclear.
+cbl2013 swh is not defined while swc was defined
       SUBROUTINE FST2SAC2(ZSOIL,SMC,SH2O,NUP,NLW,SWLT,SMAX,RT,TWH,FWH,
      +     F1WH,TWC,FWC,F1WC,FROST,PX,ZONE3,TWM,FWM,F1WM,PRFLAG,CELLID)
       
       REAL ZSOIL(*),SMC(*),SH2O(*),s0,s1,denom,twm,fwm,f1wm
+cbl2014 converting to double precision did not eliminate the wb 
+cbl2014 error, revert to real. converting swcratio to real did
+cbl2014 not help either
+cbl2014      DOUBLE PRECISION ZSOIL(*),SMC(*),SH2O(*),s0,s1,denom,twm,fwm,f1wm
       INTEGER PRFLAG,CELLID
       LOGICAL ZONE3
-      DOUBLE PRECISION SWCRATIO,LIQRATIO,SWC,STOT,SLIQ
+cbl2014      DOUBLE PRECISION SWCRATIO,LIQRATIO,SWC,STOT,SLIQ
+      DOUBLE PRECISION SWCRATIO,LIQRATIO,STOT,SLIQ
+cbl2014      REAL SWCRATIO,LIQRATIO,SWC,STOT,SLIQ
 
       if (prflag==1) write(*,*)'fst2sac swlt smax',swlt,smax
       FROST=0.         
@@ -36,6 +43,7 @@ cbl      ENDIF
 CBL Do not need to add SWLT, since we're comparing SWH to SLIQ now
       SWH=TWH+FWH+F1WH
       SWC=TWC+FWC+F1WC
+      if(prflag==1)write(*,*)'swh swc',swh,swc
 CBL This was a problem anytime we computing top soil layer depth
       if(prflag==1)write(*,*)'I STOT FROST SLIQ s0 s1 smc sh2o'
       DO I=NUP,NLW
@@ -55,8 +63,8 @@ c8  Correction liquid water to be not less than swlt
          SLIQ=SLIQ+1000.*(SH2O(I)-SWLT)*DZ/RT
          s0 = 1000*(smc(i) - swlt) * dz/rt
          s1 = 1000 * (sh2o(i) - swlt) * dz/rt
-         if(prflag==1) write(*,"(1x,7(xf13.8))")i,stot,frost,sliq,s0,s1,
-     +        smc(i),sh2o(i)
+cbl         if(prflag==1) write(*,"(1x,7(xf13.8))")i,stot,frost,sliq,s0,s1,
+cbl     +        smc(i),sh2o(i)
          
       ENDDO
       xxx = abs(stot-TWC-FWC-F1WC) 
@@ -131,8 +139,8 @@ C  CHECK CONSISTENCY OF THE WATER BALANCE BETWEEN SAC-SMA AND
          SLIQ=SLIQ+1000.*(SH2O(I)-SWLT)*DZ/RT
          s0 = 1000*(smc(i) - swlt) * dz/rt
          s1 = 1000 * (sh2o(i) - swlt) * dz/rt
-         if(prflag==1) write(*,"(1x,7(xf13.8))")i,stot,frost,sliq,s0,s1,
-     +        smc(i),sh2o(i)
+cbl         if(prflag==1) write(*,"(IX,7(xf13.8))")i,stot,frost,sliq,s0,s1,
+cbl     +        smc(i),sh2o(i)
          
       ENDDO
 C  FROZEN GROUND STATES 
