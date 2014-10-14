@@ -53,7 +53,7 @@ SUBROUTINE READ_INITIAL()
   REAL    SMCWLT(landlen)
   REAL    DZUPPER,DZLOWER,sacupper,saclower,noahupper,noahlower
   INTEGER NUP,NLOW,GX
-  LOGICAL LAYERDEF
+  LOGICAL LAYERDEF,prflag
   REAL    PI,N1,DS,BETA1,DELT,SWLTSAND,SWLT,SFLD,SMAX,noahsumcheck,sacsumcheck
   DOUBLE PRECISION ratio
   PARAMETER(PI = 3.141592653)
@@ -85,6 +85,7 @@ SUBROUTINE READ_INITIAL()
   ! They key here is that max and min values are consistent (e.g. (UZTWM + UZFWM)/DZ*1000 + SMCWLT = SMCMAX)
   SMLOW = 0.5
   LAYERDEF = .TRUE.
+  prflag=0 ! DEBUGGING ONLY SET TO "1"-->THIS PRINTS LARGE AMOUNTS OF DATA TO SCREEN
   ! For either case, first define SAC parameters
   DO I = 1,landlen
 !Fixed parameters
@@ -109,7 +110,7 @@ SUBROUTINE READ_INITIAL()
      !     SMCWLT1 = MAXSMC(SOILTYP(I)) * (200.0/SATPSI(SOILTYP(I)))**(-1.0/BB(SOILTYP(I)))
      !     SMCWLT(I) = SMCWLT1 - SMLOW * SMCWLT1
      SMCWLT(I) = WLTSMC(SOILTYP(I))
-     if (i==1) then
+     if (prflag==1) then
         write(*,*)'smcwlt(i) smlow smcmax'
         write(*,*)smcwlt(i),smlow,maxsmc(soiltyp(i))
      endif
@@ -147,7 +148,7 @@ SUBROUTINE READ_INITIAL()
      NLOW=2
      WRITE (*,*) 'Setting # upper layers to',NUP,'Lower layers to',NLOW
      DO I = 1,landlen
-        if(i==1) then
+        if (prflag==1) then
            write(*,*)'soiltype',soiltyp(i),wltsmc(soiltyp(i))
             DO GX = 1, 16
                write(*,*)'SACPAR ',GX,SACPAR(I,GX)
@@ -159,7 +160,7 @@ SUBROUTINE READ_INITIAL()
         SWLT = WLTSMC(SOILTYP(I))
         SFLD = REFSMC(SOILTYP(I))
         SMAX = MAXSMC(SOILTYP(I))
-        if(i==1)write(*,*)'swlt sfld smax',swlt,sfld,smax
+        if (prflag==1)write(*,*)'swlt sfld smax',swlt,sfld,smax
         IF (LAYERDEF.EQ..TRUE..AND.MODEL_TYPE.EQ.1) THEN
 ! Define 4 soil layer depths
            DZUPPER = (UZTWM_2d(I)+UZFWM_2d(I))/((SMAX-SWLT)*1000.)
@@ -178,7 +179,7 @@ SUBROUTINE READ_INITIAL()
            FRZPAR(I,11) = SOILDEPTH(I,2) * -1.0
            FRZPAR(I,12) = SOILDEPTH(I,3) * -1.0
            FRZPAR(I,13) = SOILDEPTH(I,4) * -1.0
-           if (i==1) then
+           if (prflag==1) then
               write(*,*)'dzupper dzlower swlt smax sfld'
               write(*,*)dzupper,dzlower,swlt,smax,sfld
               write(*,*)'Z1 Z2 Z3 Z4',SOILDEPTH(I,1),SOILDEPTH(I,2)
@@ -273,7 +274,7 @@ SUBROUTINE READ_INITIAL()
               FRZST(I,J,8) = SACST(I,J,3)
               FRZST(I,J,9) = SACST(I,J,4)
               FRZST(I,J,10)= SACST(I,J,5)
-              IF(I==1) THEN
+              IF(prflag==1) THEN
                  write(*,*)'swlt',smcwlt(I)
               endif
               DO K = 1,MAXNSOIL
@@ -287,7 +288,7 @@ SUBROUTINE READ_INITIAL()
                     ENDIF
 ! **Important** Assume warm-season start-up, no frozen soil yet
                     SH2O(I,J,K) = SMC(I,J,K)
-                    if(i==1) then
+                    if(prflag==1) then
                        write(*,*)'smc',K,smc(i,j,k)
                     endif
                  ELSE
@@ -296,7 +297,7 @@ SUBROUTINE READ_INITIAL()
                  END IF
                  STC(I,J,K)  = TBOT(I)
               END DO
-              if (i==1) then
+              if (prflag==1) then
                  sacupper=( SACST(I,J,1) + SACST(I,J,2) )
                  noahupper=(SMC(I,J,1)-SMCWLT(I))*SOILDEPTH(I,1)*1000.
                  noahupper=noahupper+(SMC(I,J,2)-SMCWLT(I))*(SOILDEPTH(I,2))*1000.
@@ -315,7 +316,7 @@ SUBROUTINE READ_INITIAL()
                  noahlower=noahlower+(SH2O(I,J,4)-SMCWLT(I))*(SOILDEPTH(I,4))*1000.
                  write(*,*)'Liq:saclower noahlower',saclower,noahlower 
               endif
-              if (i==1) then
+              if (prflag==1) then
                  do q = 1,5
                     write(*,*)'sacst',q,sacst(i,j,q)
                  enddo
@@ -903,7 +904,7 @@ write(*,*)'xlen_initial',xlen_initial
         SWLT = WLTSMC(SOILTYP(I))
         SFLD = REFSMC(SOILTYP(I))
         SMAX = MAXSMC(SOILTYP(I))
-        if(i==1)write(*,*)'swlt sfld smax',swlt,sfld,smax
+        if(prflag==1)write(*,*)'swlt sfld smax',swlt,sfld,smax
         IF (LAYERDEF.EQ..TRUE..AND.MODEL_TYPE.EQ.1) THEN
 ! Define 4 soil layer depths
            DZUPPER = (UZTWM_2d(I)+UZFWM_2d(I))/((SMAX-SWLT)*1000.)
@@ -921,7 +922,7 @@ write(*,*)'xlen_initial',xlen_initial
            FRZPAR(I,11) = SOILDEPTH(I,2) * -1.0
            FRZPAR(I,12) = SOILDEPTH(I,3) * -1.0
            FRZPAR(I,13) = SOILDEPTH(I,4) * -1.0
-           if (i==1) then
+           if (prflag==1) then
               write(*,*)'Z1 Z2 Z3 Z4',SOILDEPTH(I,1),SOILDEPTH(I,2)
               write(*,*)SOILDEPTH(I,3),SOILDEPTH(I,4)
               write(*,*)uztwm_2d(i),uzfwm_2d(i)
@@ -984,7 +985,7 @@ write(*,*)'xlen_initial',xlen_initial
               FRZST(I,J,8) = SACST(I,J,3)
               FRZST(I,J,9) = SACST(I,J,4)
               FRZST(I,J,10)= SACST(I,J,5)
-              IF(I==1) THEN
+              IF(prflag==1) THEN
                  write(*,*)'swlt',smcwlt(I)
               endif
               DO K = 1,MAXNSOIL
@@ -998,7 +999,7 @@ write(*,*)'xlen_initial',xlen_initial
                     ENDIF
 ! **Important** Assume warm-season start-up, no frozen soil yet
                     SH2O(I,J,K) = SMC(I,J,K)
-                    if(i==1) then
+                    if(prflag==1) then
                        write(*,*)'smc',K,smc(i,j,k)
                     endif
                  ELSE
@@ -1007,7 +1008,7 @@ write(*,*)'xlen_initial',xlen_initial
                  END IF
                  STC(I,J,K)  = TBOT(I)
               END DO
-              if (i==1) then
+              if (prflag==1) then
                  do q = 1,5
                     write(*,*)'sacst',q,sacst(i,j,q)
                  enddo

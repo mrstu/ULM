@@ -839,13 +839,15 @@ CVK  Non-linear (correct) transformation for frozen ground
       ELSE        
        DUZ=1.0-((1.0-RUZICE)**DINC)
        DLZS=1.0-((1.0-RLZICE)**DINC)
-       write(*,*)'ELSE'
-       write(*,*)' DUZ=1.0-((1.0-RUZICE)**DINC)'
-       delme=(1.0-RUZICE)
-       write(*,*)'DUZ ((1.0-RUZICE) RUZICE DINC',DUZ,delme,DINC,RUZICE
-       write(*,*)'DLZS=1.0-((1.0-RLZICE)**DINC)'
-       delme=(1.0-RLZICE)
-       write(*,*)'DLZS (1.0-RLZICE) RLZICE DINC',DLZS,delme,DINC,RLZICE
+       if (prflag==1)then
+          write(*,*)'ELSE'
+          write(*,*)' DUZ=1.0-((1.0-RUZICE)**DINC)'
+          delme=(1.0-RUZICE)
+          write(*,*)'DUZ ((1.0-RUZICE) RUZICE DINC',DUZ,delme,DINC,RUZICE
+          write(*,*)'DLZS=1.0-((1.0-RLZICE)**DINC)'
+          delme=(1.0-RLZICE)
+          write(*,*)'DLZS (1.0-RLZICE) RLZICE DINC',DLZS,delme,DINC,RLZICE
+       endif
       ENDIF 
       DLZP=1.0-((1.0-SACPAR(13))**DINC)
       if (prflag==1)then
@@ -871,7 +873,7 @@ C     COMPUTE DIRECT RUNOFF (FROM ADIMP AREA).
          write(*,*)'RATIO ADIMC UZTWC LZTWM',RATIO,ADIMC,UZTWC,LZTWM
       endif          
       IF (RATIO.LT.0.0) RATIO=0.0
-      write(*,*)'IF (RATIO.LT.0.0) RATIO=0.0',RATIO
+      if (prflag==1)write(*,*)'IF (RATIO.LT.0.0) RATIO=0.0',RATIO
       ADDRO=PINC*(RATIO**2)
       if (prflag==1)then
          write(*,*)'ADDRO=PINC*(RATIO**2)'

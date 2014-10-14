@@ -949,7 +949,7 @@ C     &        MODEL_TYPE,FRZST,FRZPAR,SACST,SACPAR,PRFLAG,CELLID,MSTEP)
      &           EMISS,EMISSNOW,ZLVL,SOLDN,LWDN,SNOALB,SN_NEW,
 C     State and output variables for PEMB model
      &           NSNOW,DSNOW,PSNOW,RTTSNOW,RTTDTSNOW,WTSNOW,WTDTSNOW,
-     &           TTSNOW,TTDTSNOW)
+     &           TTSNOW,TTDTSNOW,prflag)
             WRITE(*,*)'BELOW TR_19'
          ENDIF
 C     ESNOW = ETA
@@ -959,6 +959,7 @@ C ----------------------------------------------------------------------
 C UPDATE WATER BALANCE, ADD ANY DEW/FROST FALL TO PRECIP. CHANGE IT 
 C FROM M/S TO KG M-2 S-1 AS IT WAS PASSED FROM DRIVER
 C ----------------------------------------------------------------------
+CBL2014 moved this to outside SFLX and subtracted DEW from total ET
 
 c      PRCP = PRCP + (DEW * 1000)
 
@@ -1707,7 +1708,7 @@ C ----------------------------------------------------------------------
      &                  SMCREF,SHDFAC,CMCMAX,
      &                  SMCDRY,CFACTR,
      &                  EDIR1,EC1,ET1,ETT1,SFCTMP,Q2,NROOT,RTDIS,
-     &                  FXEXP,FX,MODEL_TYPE,SMCFLAG)
+     &                  FXEXP,FX,MODEL_TYPE,SMCFLAG,prflag)
 
       IMPLICIT NONE
 
@@ -1758,7 +1759,7 @@ c      REAL DEVAP
       REAL SMCREF
       REAL SMCWLT
       REAL ZSOIL(NSOIL)
-      INTEGER MODEL_TYPE,SMCFLAG
+      INTEGER MODEL_TYPE,SMCFLAG,prflag
       real noahupper,noahlower,smctot,smctot0,sh2otot,sh2otot0
       real etot,etot0,etotdif
 
@@ -1773,7 +1774,8 @@ C ----------------------------------------------------------------------
       END DO
       ETT1 = 0.
 CBL ADD PRINT STATEMENTS HERE TO CHECK ACCOUNTING OF EVAP and SMC
-      write(*,*)'--------------TOP OF EVAPO-------------'
+      if(prflag==1)then
+         write(*,*)'--------------TOP OF EVAPO-------------'
       smctot0=0
       sh2otot0=0
       noahupper=(SMC(1)-SMCWLT)*zsoil(1)*-1.*1000.
@@ -1790,6 +1792,7 @@ CBL ADD PRINT STATEMENTS HERE TO CHECK ACCOUNTING OF EVAP and SMC
       etot0=edir1+ec1+ett1
       write(*,*)'etot0 edir1 ec1 ett1',etot0,edir1,ec1,ett1
       write(*,*)'------------------------------------'
+      endif
       IF (ETP1 .GT. 0.0) THEN
 
 C ----------------------------------------------------------------------
@@ -1810,8 +1813,10 @@ c     EDIR = DEVAP(ETP1,SH2O(1),ZSOIL(1),SHDFAC,SMCMAX,
 !            ENDIF
                etot=edir1+ec1+ett1
                etotdif=etot-etot0
-               write(*,*)'BELOW DEVAP etot etotdif',etot,etotdif
-               write(*,*)'etot edir1 ec1 ett1',etot,edir1,ec1,ett1
+               if(prflag==1)then
+                  write(*,*)'BELOW DEVAP etot etotdif',etot,etotdif
+                  write(*,*)'etot edir1 ec1 ett1',etot,edir1,ec1,ett1
+               endif
 
          ENDIF
 
@@ -1829,8 +1834,10 @@ C ----------------------------------------------------------------------
           END DO
           etot=edir1+ec1+ett1
           etotdif=etot-etot0
-          write(*,*)'BELOW TRANSP etot etotdif',etot,etotdif
-          write(*,*)'etot edir1 ec1 ett1',etot,edir1,ec1,ett1
+          if(prflag==1)then
+             write(*,*)'BELOW TRANSP etot etotdif',etot,etotdif
+             write(*,*)'etot edir1 ec1 ett1',etot,edir1,ec1,ett1
+          endif
 
 
 C ----------------------------------------------------------------------
@@ -1851,8 +1858,10 @@ C ----------------------------------------------------------------------
           EC1 = MIN ( CMC2MS, EC1 )
           etot=edir1+ec1+ett1
           etotdif=etot-etot0
-          write(*,*)'BELOW EC1 etot etotdif',etot,etotdif
-          write(*,*)'etot edir1 ec1 ett1',etot,edir1,ec1,ett1
+          if(prflag==1)then
+             write(*,*)'BELOW EC1 etot etotdif',etot,etotdif
+             write(*,*)'etot edir1 ec1 ett1',etot,edir1,ec1,ett1
+          endif
         ENDIF
       ENDIF
 
@@ -2664,7 +2673,7 @@ C ----------------------------------------------------------------------
      &                 SMCREF,SHDFAC,CMCMAX,
      &                 SMCDRY,CFACTR, 
      &                 EDIR1,EC1,ET1,ETT1,SFCTMP,Q2,NROOT,RTDIS,
-     &                 FXEXP,FX,MODEL_TYPE,SMCFLAG)
+     &                 FXEXP,FX,MODEL_TYPE,SMCFLAG,prflag)
            IF (MODEL_TYPE.EQ.0) THEN
            CALL SMFLX (SMC,NSOIL,CMC,DT,PRCP1,ZSOIL,
      &                 SH2O,SLOPE,KDT,FRZFACT,
@@ -4767,7 +4776,7 @@ cbl2014 layer thickness, dz, which is in meters to get a unitless fraction
 cbl2014            SH2O(I) = SH2O(I) - ET1(I)
 cbl2014            SMC(I) = SMC(I) - ET1(I)
             ETFraction=ET1MM(I)*(0.001/dz(i))
-            write(*,*)'ETFraction',ETFraction
+            if(prflag==1)write(*,*)'ETFraction',ETFraction
             SH2O(I) = SH2O(I) - ETFraction
             SMC(I) = SMC(I) - ETFraction
             if (PRFLAG==1) write(*,*)'sh2o smc',i,sh2o(i),smc(i)
@@ -4819,7 +4828,7 @@ cbl2014      DO I = 1,NUPL
 cbl2014            SH2O(I) = SH2O(I) - ET1(I)
 cbl2014            SMC(I) = SMC(I) - ET1(I)
             ETFraction=ET1MM(I)*(0.001/dz(i))
-            write(*,*)'ETFraction',ETFraction
+            if(prflag==1)write(*,*)'ETFraction',ETFraction
             SH2O(I) = SH2O(I) - ETFraction
             SMC(I) = SMC(I) - ETFraction
             if (PRFLAG==1) write(*,*)'sh2o smc',i,sh2o(i),smc(i)
@@ -5506,7 +5515,7 @@ c          CALL EVAPO (ETA1,SMC,NSOIL,CMC,ETP1,DT,ZSOIL,
      &            SMCREF,SHDFAC,CMCMAX,
      &            SMCDRY,CFACTR,
      &            EDIR1,EC1,ET1,ETT1,SFCTMP,Q2,NROOT,RTDIS,
-     &            FXEXP,FX,MODEL_TYPE,SMCFLAG)
+     &            FXEXP,FX,MODEL_TYPE,SMCFLAG,prflag)
 c        ENDIF
 C ----------------------------------------------------------------------
             EDIR1 = EDIR1*(1.-SNCOVR)
@@ -6023,7 +6032,7 @@ C ----------------------------------------------------------------------
      &            SMCREF,SHDFAC,CMCMAX,
      &            SMCDRY,CFACTR,
      &            EDIR1,EC1,ET1,ETT1,SFCTMP,Q2,NROOT,RTDIS,
-     &            FXEXP,FX,MODEL_TYPE,SMCFLAG)
+     &            FXEXP,FX,MODEL_TYPE,SMCFLAG,prflag)
 C ----------------------------------------------------------------------
             EDIR1 = EDIR1*(1.-SNCOVR)
             EC1 = EC1*(1.-SNCOVR)
@@ -6876,7 +6885,7 @@ C Variable for actual vapor pressure
 C Compute vapor mass flux, VMF (M), and divide through by the density of water
        VMF = (AIRDEN*(0.622/SFCPRS)*(EACT-ESSNOW)*CH)/(1000*SFCSPD)
        if(prflag==1)WRITE(*,*)'vmf dns prs wnd',VMF,AIRDEN,SFCPRS,SFCSPD
-       if(prflag==1)  WRITE(*,*)'eact essnow ch',EACT,ESSNOW,CH
+       if(prflag==1)WRITE(*,*)'eact essnow ch',EACT,ESSNOW,CH
        IF (TSURF.GE.TFREEZ) THEN
          LHF = LSUBC*VMF*1000
        ELSE
@@ -6922,7 +6931,7 @@ C ----------------------------------------------------------------------
      &               EMISS,EMISSNOW,ZLVL,SOLDN,LWDN,SNOALB,SN_NEW,
 C State and output variables
      &     NSNOW,DSNOW,PSNOW,RTTSNOW,RTTDTSNOW,WTSNOW,WTDTSNOW,TTSNOW,
-     &     TTDTSNOW)
+     &     TTDTSNOW,prflag)
 
 
       IMPLICIT NONE
@@ -6935,7 +6944,7 @@ C State and output variables
       INTEGER ITER
       INTEGER K
       INTEGER J
-      INTEGER ERFLAG
+      INTEGER ERFLAG,prflag
 
       LOGICAL SNOWNG
       LOGICAL FRZGRA
@@ -7124,7 +7133,7 @@ C New snowpack case
 C Arrays for (up to) 100 snow layers, temperature, density, liquid w/c, 
 C SWE as well as global variables: number of layers (N). Move 
 C definitions from inside PEMB to MAIN_DRIVER
-      WRITE(*,*)'ABOVE PEMB'
+      if(prflag==1)WRITE(*,*)'ABOVE PEMB'
       CALL PEMB(ZO,MODEL_TYPE,ITOPT,ITS,IPUNCH,IGRAD,IQAE,IFU,NN,
      &     DELTAT,DTOUT,THEDA,TOLER,GRMAX,DTONE,TEXP,THICK,CTHICK,
      &     ADJQA,HEIGHT,D_O,PA,X,DTG,TCG,DCG,SFC,RCF,PLWHC,PLWMAX,
@@ -7135,7 +7144,7 @@ C definitions from inside PEMB to MAIN_DRIVER
 C State and output variables
      &     NSNOW,DSNOW,PSNOW,RTTSNOW,RTTDTSNOW,WTSNOW,WTDTSNOW,TTSNOW,
      &     TTDTSNOW,SCOUTSNOW,VAPOURSNOW,QGSNOW)
-      WRITE(*,*)'BELOW PEMB'
+      if(prflag==1)WRITE(*,*)'BELOW PEMB'
 C ----------------------------------------------------------------------
 C Obtain sums over N layers and convert necessary units
 C SNOMLT (m), ESD (m), ESNOW(mm/s), SSOIL (W/m2)

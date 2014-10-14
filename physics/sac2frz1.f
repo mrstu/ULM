@@ -381,8 +381,8 @@ CBL Convert precision back
          frost = frost + 1000 * (smcx(i) - sh2ox(i)) * dz
          s0 = 1000 * (smcx(i) - swlt) * dz
          s1 = 1000 * (sh2ox(i) - swlt) * dz
-         if(prflag==1) write(*,"(1x,8(xf13.8))")i,stot2,frost,sliq2,
-     +        s0,s1,smcx(i),sh2ox(i),dz
+cbl         if(prflag==1) write(*,"(1x,8(xf13.8))")i,stot2,frost,sliq2,
+cbl     +        s0,s1,smcx(i),sh2ox(i),dz
       enddo
       diftot = stot2 - stot1
       difliq = sliq2 - sliq1
