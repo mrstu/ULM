@@ -963,8 +963,8 @@ PROGRAM noah
 !            END IF
             if (prflag==1)write(*,*)'wb_sum wb_add',wb_sum,wb_add
             if (prflag==1)write(*,*)'wb_error band_area',wb_error,band_area(I,J)
-            wb_sum = wb_sum + wb_error
             partial_error=(wb_error*band_area(I,J))
+            wb_sum = wb_sum + partial_error
             if(prflag==1)write(*,*)'partial_error',partial_error
             wb_add = wb_add + partial_error
             if (prflag==1)write(*,*)'wb_sum = wb_sum + wb_error',wb_sum,wb_error
