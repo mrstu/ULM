@@ -897,7 +897,10 @@ PROGRAM noah
                SOILW(I) = SOILW(I) + SOILW_band*band_area(I,J)
                SOILM(I) = SOILM(I) + SOILM_band*band_area(I,J)
                Albedo_ALMA(I) = Albedo_ALMA(I) + ALB_TOT_band*band_area(I,J)
-               SWE(I) = SWE(I) + SNEQV(I,J)*1000.0*band_area(I,J)
+               ! BL2014 --> Need multiply incremental SWE, SNEQV(I,J), by it's fractional 
+               ! coverage, SNCOVR(I,J), to preserve the water balance
+               !               SWE(I) = SWE(I) + SNEQV(I,J)*1000.0*band_area(I,J)
+               SWE(I) = SWE(I) + SNEQV(I,J)*1000.0*band_area(I,J)*SNCOVR(I,J)
                if (prflag==1)write(*,*)'SWE(I) =',SWE(I)
                UZTWC(I) = UZTWC(I) + SACST(I,J,1)*band_area(I,J)
                UZFWC(I) = UZFWC(I) + SACST(I,J,2)*band_area(I,J)
@@ -1147,7 +1150,8 @@ PROGRAM noah
         WRITE(*,*)
         WRITE(*,*)'OUTPUT STEP',OUTPUT_STEP,'FORCING STEP',FORCING_STEP
         WRITE(*,*)'avg wb_error per cell:',wb_error,'mm',year,month,day
-        if(prflag==1)WRITE(*,*)'avg wb_error added per cell:',wb_add,'mm',year,month,day
+!        if(prflag==1)WRITE(*,*)'avg wb_error added per cell:',wb_add,'mm',year,month,day
+        WRITE(*,*)'avg wb_error added per cell:',wb_add,'mm',year,month,day
 !        WRITE(*,*)'avg eb_error per cell:',eb_error,'W/m2'
 !        wb_error = (Rainf(1) + Snowf(1) - Evap(1) - Qs(1) - Qsb(1)) * OUTPUT_DT - (DelIntercept(1) + DelSurfStor(1) + DelSWE(1) + DelSoilMoist(1))
 !        eb_error = (SWnet(1) + LWnet(1) - Qh(1) - Qle(1) - Qg(1) - Qf(1) - Qa(1)) - (DelSurfHeat(1) + DelColdCont(1))/OUTPUT_DT
