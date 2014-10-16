@@ -963,8 +963,8 @@ PROGRAM noah
 !            END IF
             if (prflag==1)write(*,*)'wb_sum wb_add',wb_sum,wb_add
             if (prflag==1)write(*,*)'wb_error band_area',wb_error,band_area(I,J)
+            wb_sum = wb_sum + wb_error
             partial_error=(wb_error*band_area(I,J))
-            wb_sum = wb_sum + partial_error
             if(prflag==1)write(*,*)'partial_error',partial_error
             wb_add = wb_add + partial_error
             if (prflag==1)write(*,*)'wb_sum = wb_sum + wb_error',wb_sum,wb_error
@@ -1150,8 +1150,7 @@ PROGRAM noah
         WRITE(*,*)
         WRITE(*,*)'OUTPUT STEP',OUTPUT_STEP,'FORCING STEP',FORCING_STEP
         WRITE(*,*)'avg wb_error per cell:',wb_error,'mm',year,month,day
-!        if(prflag==1)WRITE(*,*)'avg wb_error added per cell:',wb_add,'mm',year,month,day
-        WRITE(*,*)'avg wb_error added per cell:',wb_add,'mm',year,month,day
+        if(prflag==1)WRITE(*,*)'avg wb_error added per cell:',wb_add,'mm',year,month,day
 !        WRITE(*,*)'avg eb_error per cell:',eb_error,'W/m2'
 !        wb_error = (Rainf(1) + Snowf(1) - Evap(1) - Qs(1) - Qsb(1)) * OUTPUT_DT - (DelIntercept(1) + DelSurfStor(1) + DelSWE(1) + DelSoilMoist(1))
 !        eb_error = (SWnet(1) + LWnet(1) - Qh(1) - Qle(1) - Qg(1) - Qf(1) - Qa(1)) - (DelSurfHeat(1) + DelColdCont(1))/OUTPUT_DT
