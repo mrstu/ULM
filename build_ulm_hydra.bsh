@@ -1,0 +1,13 @@
+#!/bin/bash
+
+source /usr/local/bin/client64-bash
+
+rm -rf obj
+mkdir obj
+
+date  > log_build-make.txt
+echo "PWD:" $(pwd) > log_build-make.txt
+echo "Git branch: "  > log_build-make.txt
+git branch > log_build-make.txt
+
+make -f makefile.hydra.mk > log_build-make.txt 2>&1 

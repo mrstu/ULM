@@ -1,0 +1,22 @@
+#!/bin/bash
+
+module load icc_14.0.2
+module load netcdf_fortran_4.2-icc_14.0.2
+module load git_1.8.2.3
+
+#export LIB_NETCDF="/sw/netcdf-fortran-4.2_icc-14.0.2_rh6/lib"
+#export INC_NETCDF="/sw/netcdf-fortran-4.2_icc-14.0.2_rh6/include"
+mkdir obj
+rm obj/*
+
+## pfg90 versus ifort
+#sed -i 's/IX/1x/g' physics/sac2frz1.f
+
+### Deprecated (now use host specific makefile)
+## get driver/driverMod.f90
+#cp /gscratch/hydro/mrstu/driverMod.f90.hyak driver/driverMod.f90
+## appropriate makefile
+#cp /gscratch/hydro/mrstu/makefile.hyak makefile
+#make > log_build_ulm.txt 2>&1
+
+make -f makefile.hyak.mk > log_build_ulm.txt 2>&1
