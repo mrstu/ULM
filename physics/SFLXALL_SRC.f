@@ -907,6 +907,10 @@ C ----------------------------------------------------------------------
      &        CSOIL,FRZST,FRZPAR,SACST,SACPAR,BETA,DRIP,DEW,
      &        FLX1,FLX2,FLX3,EMISS,MODEL_TYPE,PRFLAG,CELLID,MSTEP,
      &        wcrit,richards)
+          if (prflag==1) then
+          write(*,*)'-----------sflx BELOW NOPAC------'
+          endif
+
       ELSE
          IF (MODEL_TYPE == 0.OR. MODEL_TYPE == 1) THEN
 C            CALL SNOPAC (ETP,ETA,PRCP,PRCP1,SNOWNG,SMC,SMCMAX,SMCWLT,
@@ -932,6 +936,10 @@ C     &        MODEL_TYPE,FRZST,FRZPAR,SACST,SACPAR,PRFLAG,CELLID,MSTEP)
      &           DEW,FLX1,FLX2,FLX3,ESNOW,EMISS,EMISSNOW,MODEL_TYPE,
      &           FRZST,FRZPAR,SACST,SACPAR,ERFLAG,PRFLAG,CELLID,MSTEP,
      &           LVRAIN,wcrit,psnow2,richards)
+          if (prflag==1) then
+          write(*,*)'-----------sflx BELOW SNWPAC------'
+          endif
+
          ELSE
             WRITE(*,*)'ABOVE TR_19'
             CALL TR_19 (ETP,ETA,PRCP,PRCP1,SNOWNG,FRZGRA,SMC,SMCMAX,
@@ -950,7 +958,11 @@ C     &        MODEL_TYPE,FRZST,FRZPAR,SACST,SACPAR,PRFLAG,CELLID,MSTEP)
 C     State and output variables for PEMB model
      &           NSNOW,DSNOW,PSNOW,RTTSNOW,RTTDTSNOW,WTSNOW,WTDTSNOW,
      &           TTSNOW,TTDTSNOW,prflag)
-            WRITE(*,*)'BELOW TR_19'
+!            WRITE(*,*)'BELOW TR_19'
+          if (prflag==1) then
+          write(*,*)'-----------sflx BELOW TR_19------'
+          endif
+
          ENDIF
 C     ESNOW = ETA
       ENDIF
@@ -964,7 +976,7 @@ CBL2014 moved this to outside SFLX and subtracted DEW from total ET
 c      PRCP = PRCP + (DEW * 1000)
 
       if (prflag==1) then
-      write(*,*)'-----------sflx BELOW NOPAC------' 
+CMS   write(*,*)'-----------sflx BELOW NOPAC------'
       tsum=0;
       DO K=1,4
          tsum=tsum+et(K)
@@ -1827,7 +1839,8 @@ C ----------------------------------------------------------------------
         IF (SHDFAC.GT.0.0) THEN
 
          CALL TRANSP(ET1,NSOIL,ETP1,SH2O,STC,CMC,ZSOIL,SHDFAC,SMCWLT,
-     &                 CMCMAX,PC,CFACTR,SMCREF,SFCTMP,Q2,NROOT,RTDIS)
+     &                 CMCMAX,PC,CFACTR,SMCREF,SFCTMP,Q2,NROOT,RTDIS,
+     &                 prflag)
 
           DO K = 1,NSOIL
             ETT1 = ETT1 + ET1(K)
@@ -8176,7 +8189,8 @@ C ----------------------------------------------------------------------
       END
 
       SUBROUTINE TRANSP (ET1,NSOIL,ETP1,SMC,STC,CMC,ZSOIL,SHDFAC,SMCWLT,
-     &                   CMCMAX,PC,CFACTR,SMCREF,SFCTMP,Q2,NROOT,RTDIS)
+     &                   CMCMAX,PC,CFACTR,SMCREF,SFCTMP,Q2,NROOT,RTDIS,
+     &                   prflag)
 
       IMPLICIT NONE
 
@@ -8189,6 +8203,7 @@ C ----------------------------------------------------------------------
       INTEGER K
       INTEGER NSOIL
       INTEGER NROOT
+      INTEGER PRFLAG
 
       REAL CFACTR
       REAL CMC
@@ -8214,6 +8229,8 @@ C.....REAL PART(NSOIL)
       REAL ZSOIL(NSOIL)
       REAL STCRT
       REAL DSTCRT
+
+      REAL JNK
 
 C ----------------------------------------------------------------------
 C INITIALIZE PLANT TRANSP TO ZERO FOR ALL SOIL LAYERS.
@@ -8258,14 +8275,42 @@ C seasonal factor for reduced root water uptake
 C calculate root zone soil temp
        STCRT=0
        DSTCRT=0
+         if(prflag==1)then
+           write(*,*)'root depths (1,nroot):1',NROOT
+         endif
+
       DO K=1,NROOT
+         if(prflag==1)then
+           write(*,*)'K:',K,'STC(K):',STC(K),'ZSOIL(K):',ZSOIL(K)
+         endif
+
        STCRT=STCRT+ZSOIL(K)*STC(K)
        DSTCRT=DSTCRT+ZSOIL(K)
+         if(prflag==1)then
+           write(*,*)'K:',K,'STCRT:',STCRT,'DSTCRT:',DSTCRT
+         endif
+
       ENDDO
        STCRT=STCRT/DSTCRT
+         if(prflag==1)then
+           write(*,*)'STCRT/DSTCRT FOR (k=1,nroot):',STCRT
+         endif
+
 
         DO K = 1,NROOT
          GTX(K)= MAX(0.0,1.-0.0016* MAX(298.- STCRT,0.0)**2)
+
+CMS   From log, GTX has to go from at most 0 to 1 so how is it so big?
+CMS   ET1(1) = RTDIS(1) * ETP1A * GTX(1)
+CMS   988939.4       1.000000      5.0015522E-19  1.9772650E+24
+
+
+         if(prflag==1)then
+           write(*,*)'K:',K,'GTX(K):',GTX(K)
+           JNK=MAX(298.- STCRT,0.0)**2
+           write(*,*)'MAX(298.- STCRT,0.0)',JNK
+         endif
+
         ENDDO
 
 C ----------------------------------------------------------------------
@@ -8278,6 +8323,8 @@ C ----------------------------------------------------------------------
 C USING ROOT DISTRIBUTION AS WEIGHTING FACTOR
 C ----------------------------------------------------------------------
        ET1(1) = RTDIS(1) * ETP1A * GTX(1)
+       if(prflag==1)write(*,*)'ET1(1) = RTDIS(1) * ETP1A * GTX(1)'
+       if(prflag==1)write(*,*)ET1(1),RTDIS(1),ETP1A,GTX(1)
 C      ET1(1) = ETP1A * PART(1)
 C ----------------------------------------------------------------------
 C LOOP DOWN THRU THE SOIL LAYERS REPEATING THE OPERATION ABOVE,
@@ -8295,6 +8342,8 @@ C ----------------------------------------------------------------------
 C USING ROOT DISTRIBUTION AS WEIGHTING FACTOR
 C ----------------------------------------------------------------------
          ET1(K) = RTDIS(K)*ETP1A * GTX(K)
+         if(prflag==1)write(*,*)'ET1(K) = RTDIS(K) * ETP1A * GTX(K)'
+         if(prflag==1)write(*,*)ET1(K),RTDIS(K),ETP1A,GTX(K)
 C        ET1(K) = ETP1A*PART(K)
        END DO      
 C ----------------------------------------------------------------------
@@ -8376,7 +8425,7 @@ C ----------------------------------------------------------------------
      &     PSISAT,SLOPE,SNUP,SALP,BEXP,DKSAT,DWSAT,
      &     SMCMAX,SMCWLT,SMCREF,SMCDRY,F1,QUARTZ,FXEXP,
      &     RTDIS,SLDPTH,ZSOIL,NROOT,NSOIL,Z0,CZIL,LAI,CSOIL,
-     &     PTU,EMISS,EMISSNOW,MODEL_TYPE)
+     &     PTU,EMISS,EMISSNOW,MODEL_TYPE,prflag)
 
       IMPLICIT NONE
 C ----------------------------------------------------------------------
@@ -8399,7 +8448,7 @@ C SET MAXIMUM NUMBER OF SOIL-, VEG-, AND SLOPETYP IN DATA STATEMENT.
 C ----------------------------------------------------------------------
       INTEGER MAX_SLOPETYP
       INTEGER MAX_SOILTYP
-      INTEGER MAX_VEGTYP
+      INTEGER MAX_VEGTYP,prflag
 
       PARAMETER(MAX_SLOPETYP = 30)
       PARAMETER(MAX_SOILTYP = 30)
@@ -9042,6 +9091,8 @@ C     ----------------------------------------------------------------------
         STOP 333
       ENDIF
 
+      if(prflag==1)write(*,*)'VEGTYP,SOILTYP,SLOPETYP'
+      if(prflag==1)write(*,*)VEGTYP,SOILTYP,SLOPETYP
 C ----------------------------------------------------------------------
 C SET-UP UNIVERSAL PARAMETERS (NOT DEPENDENT ON SOILTYP, VEGTYP OR
 C SLOPETYP)
@@ -9176,9 +9227,11 @@ cbl         write(*,*)rmax,croot,d50
 cbl         write(*,*)'rtdis1',i,rtdis1(i)
             if (I.NE.1.AND.RMAX.GT.-zsoil(i-1)) then
                NROOT = I
+               if(prflag==1)write(*,*)'nroot in loop',i,nroot
             endif
          enddo
-cbl      write(*,*)'nroot',nroot
+
+         if(prflag==1)write(*,*)'nroot after loop',nroot
 
 CBL -- EXPERIMENT LATER         rtdis(1) = rtdis1(1)/RMAX 
 cbl      write(*,*)'RTDIS',1.0,RTDIS(1)
