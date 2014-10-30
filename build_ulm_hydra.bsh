@@ -1,5 +1,31 @@
 #!/bin/bash
 
+#args=( "$@" )
+#nargs="${#args[@]}"
+if [ "$#" -eq 1 ]
+then
+    echo $nargs
+    echo ${args[@]}
+    
+    case "$1" in
+
+        0)
+            debugOn=0
+            ;;
+        1)
+            debugOn=1
+            ;;
+        *)
+            echo "Usage: <debugOn>[0|1]"
+            exit 1
+            ;;
+    esac              
+else
+    echo "Usage: <debugOn>[0|1]"
+    debugOn=0
+    exit 1
+fi
+
 source /usr/local/bin/client64-bash
 
 rm -rf obj
@@ -10,4 +36,20 @@ echo "PWD:" $(pwd) > log_build-make.txt
 echo "Git branch: "  > log_build-make.txt
 git branch > log_build-make.txt
 
+## turn on debugging
+if [ $debugOn -eq 1 ]
+then
+
+sed -i -e 's/prflag=0 ! DEBUGGING ONLY /prflag=1 ! DEBUGGING ONLY /g' driver/MAIN_DRIVER.f90
 make -f makefile.hydra.mk > log_build-make.txt 2>&1 
+mv ulm ulm.debugOn
+
+else
+
+## turn off debuggin
+sed -i -e 's/prflag=1 ! DEBUGGING ONLY /prflag=0 ! DEBUGGING ONLY /g' driver/MAIN_DRIVER.f90
+make -f makefile.hydra.mk > log_build-make.txt 2>&1 
+mv ulm ulm.debugOff
+
+fi
+
