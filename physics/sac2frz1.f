@@ -58,8 +58,8 @@ C  FREE WATER IS SPLITTED EQUALLY RETWEEN LAYERS
          frost = frost + 1000*(smcx(i) - sh2ox(i)) * dz
          s0 = 1000 * (smcx(i) - swlt) * dz
          s1 = 1000 * (sh2ox(i) - swlt) * dz
-cms         if(prflag==1) write(*,"(IX,8(xf13.8))")i,stot0,frost,sliq0,
-cms     +        s0,s1,smcx(i),sh2ox(i),dz
+         if(prflag==1) write(*,"(IX,8(xf13.8))")i,stot0,frost,sliq0,
+     +        s0,s1,smcx(i),sh2ox(i),dz
       enddo
       if(prflag==1)write(*,*)'DWF',dwf
       if(nupl .gt. 5) then
@@ -189,8 +189,8 @@ cbl as we bring SH2O(I) back to SWLT and carry the remainder in DWX
          frost = frost + 1000 * (smcx(i) - sh2ox(i)) * dz
          s0 = 1000 * (smcx(i) - swlt) * dz
          s1 = 1000 * (sh2ox(i) - swlt) * dz
-cms         if(prflag==1) write(*,"(IX,8(xf13.8))")i,stot1,frost,sliq1,
-cms     +        s0,s1,smcx(i),sh2ox(i),dz
+         if(prflag==1) write(*,"(IX,8(xf13.8))")i,stot1,frost,sliq1,
+     +        s0,s1,smcx(i),sh2ox(i),dz
       enddo
       diftot = stot1 - stot0
       difliq = sliq1 - sliq0
@@ -346,8 +346,8 @@ CVK  12/2005    IF(xx1 .GT. 1E-2) THEN
          frost = frost + 1000 * (smcx(i) - sh2ox(i)) * dz
          s0 = 1000 * (smcx(i) - swlt) * dz
          s1 = 1000 * (sh2ox(i) - swlt) * dz
-cms         if(prflag==1) write(*,"(IX,8(xf13.8))")i,stot2,frost,sliq2,
-cms     +        s0,s1,smcx(i),sh2ox(i),dz
+         if(prflag==1) write(*,"(IX,8(xf13.8))")i,stot2,frost,sliq2,
+     +        s0,s1,smcx(i),sh2ox(i),dz
       enddo
       diftot = stot2 - stot1
       difliq = sliq2 - sliq1

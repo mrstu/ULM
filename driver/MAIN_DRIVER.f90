@@ -63,7 +63,14 @@ PROGRAM noah
   REAL    :: temp1,temp2,temp3,temp4,temp5,temp6,temp7,temp8,temp9,temp10,temp11,temp12,temp13,snowcover,sacupper,saclower,noahupper,noahlower
   REAL    :: wb_sum,eb_sum,balance_counter, product,SNCOVR_save_band
   REAL    MAXSMC(30)
-  REAL    WLTSMC(20),wb_add,wb_tstep,partial_error
+  REAL    WLTSMC(20)
+  REAL    wb_add,wb_tstep,partial_error,runoff_add,evap_add,swe_value,sm_value,cmc_value,swe_value0,sm_value0,cmc_value0,swe_value1,sm_value1,cmc_value1,swe_value_diff,sm_value_diff,cmc_value_diff
+  REAL    step_bal,evap_value,evap_value0,evap_value1,qs_value,qs_value0,qs_value1
+  real    qsb_value,qsb_value0,qsb_value1,rainf_value,snowf_value,prcp_value
+  real    sm_change_sum,swe_change_sum,cmc_change_sum,sum_balance,flux_balance
+  REAL    temp1_sum,temp2_sum,temp3_sum,temp4_sum,temp5_sum,temp6_sum,temp7_sum,temp8_sum,temp9_sum
+  real    temp10_sum,temp11_sum,temp12_sum,temp13_sum,temp14,temp14_sum,temp_bal,wb_add_out
+  real    adimc_band,adimc_save_band,temp15,altwb_error
 
   DATA MAXSMC/0.37308, 0.38568, 0.41592, 0.46758, 0.47766, 0.43482, 0.41592, 0.4764, 0.44868, 0.42348, 0.48144, 0.46128, 0.464, 0.000, 0.200, 0.421, 0.457, 0.200, 0.395, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000/
   DATA WLTSMC/0.03469064, 0.05199094, 0.08743051, 0.14637683, 0.10712489, 0.13941739, 0.15698002, 0.24386303, 0.21203782, 0.20755672, 0.28488226, 0.28290603, 0.069, 0.000, 0.012, 0.028, 0.135, 0.012, 0.023, 0.000/
@@ -182,6 +189,7 @@ PROGRAM noah
   sec = 0
   FORCING_STEP = 1
   FSTEP_COUNT = 1
+  wb_add = 0.0
   write(*,*)'tsteps_per_day ',tsteps_per_day
   write(*,*)'FORCING_DT ',FORCING_DT
   write(*,*)'MODEL_DT ',MODEL_DT
@@ -219,7 +227,49 @@ PROGRAM noah
     WRITE(*,*)'ERROR: FORCING_STEP',FORCING_STEP,'not found in forcing file',FORCFILE
     STOP
   ENDIF
-  wb_add = 0.0
+!  wb_add = 0.0
+  runoff_add = 0.0
+  evap_add = 0.0
+  swe_value = 0.0
+  sm_value = 0.0
+  cmc_value = 0.0
+  swe_value0 = 0.0
+  sm_value0 = 0.0
+  cmc_value0 = 0.0
+  swe_value1 = 0.0
+  sm_value1 = 0.0
+  cmc_value1 = 0.0
+  step_bal=0.0
+  evap_value=0.0
+  qs_value=0.0
+  qsb_value=0.0
+  rainf_value=0.0
+  snowf_value=0.0
+  prcp_value=0.0
+  evap_value0=0.0
+  qs_value0=0.0
+  qsb_value0=0.0
+  evap_value1=0.0
+  qs_value1=0.0
+  qsb_value1=0.0
+  sm_change_sum=0.0
+  swe_change_sum=0.0
+  cmc_change_sum=0.0
+  temp1_sum=0.0
+  temp2_sum=0.0
+  temp3_sum=0.0
+  temp4_sum=0.0
+  temp5_sum=0.0
+  temp6_sum=0.0
+  temp7_sum=0.0
+  temp8_sum=0.0
+  temp9_sum=0.0
+  temp10_sum=0.0
+  temp11_sum=0.0
+  temp12_sum=0.0
+  temp13_sum=0.0
+  temp14_sum=0.0
+
   ! RUN TIME AND SPATIAL LOOP
   DO
 
@@ -381,13 +431,13 @@ PROGRAM noah
  !Ben Livneh track effective snowpack temp TPACK = SnowTProf
       SnowTProf = 0.0
       wb_sum = 0.0
-      prflag=0 ! DEBUGGING ONLY SET TO "1"-->THIS PRINTS LARGE AMOUNTS OF DATA TO SCREEN
+      prflag=0  ! DEBUGGING ONLY SET TO "1"-->THIS PRINTS LARGE AMOUNTS OF DATA TO SCREEN
 !      write(*,*)'day of year',day_of_year
       !$OMP PARALLEL DO
       DO I = 1,landlen
          !         write(*,*)'ilatlon',I,LAT(X(I),Y(I)),LON(X(I),Y(I))
          !  Start debugging conditional
-         !       IF (I==1) THEN ! BL2014 Hack to run only one cell
+         !IF (I==100) THEN ! BL2014 Hack to run only one cell
          !          prflag=1
          !         IF (I==1 .or. MOD(I,32) == 0) THEN
          ! colorado succesful calibration
@@ -409,6 +459,7 @@ PROGRAM noah
          if(prflag==1) write(*,*)'####msc',model_step_count,Rainf(i)
          if (prflag == 1) THEN
             write(*,*)'Before snowband loop'
+            write(*,*)'ilatlon',I,LAT(X(I),Y(I)),LON(X(I),Y(I))
             write(*,*)X(I),Y(I),LAT(X(I),Y(I)),LON(X(I),Y(I))
             write(*,*)
             write(*,*)NSOIL(I),SOILDEPTH(I,:),SOILTYP(I),SLOPETYP(I),TBOT(I)
@@ -513,22 +564,34 @@ PROGRAM noah
                SOILMOIST_save_band = SOILMOIST_total_band
 
                ! ADDED (MRS 20140613): snow scraping
-               if (month .EQ. 9 .AND. day .EQ. 1) then
-                  SNEQV(I,J)=0.
-                  PACH20(I,J)=0.
-               endif
+!               if (month .EQ. 9 .AND. day .EQ. 1) then
+!                  SNEQV(I,J)=0.
+!                  PACH20(I,J)=0.
+!               endif
                ! END ADDED
 
                SWE_band = SNEQV(I,J)*1000.0
                !               if (SNEQV(I,J)>0.) then
                !                  write(*,*)'swe',SNEQV(I,J),'i',i,'month',month
                !               endif
-               PackWater_band = PACH20(I,J)*1000
+               PackWater_band = PACH20(I,J)*1000.0
                SWE_save_band = SWE_band
+               ADIMC_band = SACST(I,J,6)
+               ADIMC_save_band = ADIMC_band
                CMC_total_band = 0
-               CMC_total_band = CMC_total_band + CMC(I,J) * 1000
+               CMC_total_band = CMC_total_band + CMC(I,J) * 1000.0
                CMC_save_band = CMC_total_band
-
+!Maybe add a multiplication by the band area to a cell-averaged counter
+               if(prflag==1)write(*,*)'model_step model_step_count',model_step,model_step_count
+               if(model_step_count==1) then
+                  if(prflag==1)write(*,*)'XXmodel_step_count',model_step_count
+                  sm_value0=sm_value0+SOILMOIST_save_band*band_area(I,J)
+                  if(prflag==1)write(*,*)'XXsm_value0',sm_value0,band_area(I,J)
+                  swe_value0=swe_value0+SWE_save_band*band_area(I,J)
+                  if(prflag==1)write(*,*)'XXswe_value0',swe_value0,band_area(I,J)
+                  cmc_value0=cmc_value0+CMC_save_band*band_area(I,J)
+                  if(prflag==1)write(*,*)'XXcmc_value0',cmc_value0,band_area(I,J)
+               endif
                if (prflag == 1) then
                   write(*,*)'above sflx'
                   write(*,*)'cell',I,'band',J,'DT_PRCP_band',DT_PRCP_band,'DT_TAIR_band',DT_TAIR_band,'SNEQV',SNEQV(I,J)
@@ -557,20 +620,19 @@ PROGRAM noah
                if (prflag==1) then
                   write(*,*)'cell',i
                   sacupper=( SACST(I,J,1) + SACST(I,J,2) )
-                  noahupper=(SMC(I,J,1)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,1)*1000+(SMC(I,J,2)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,2)*1000
+                  noahupper=(SMC(I,J,1)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,1)*1000.0+(SMC(I,J,2)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,2)*1000.0
                   write(*,*)'Cont:sacupper noahupper',sacupper,noahupper
                   saclower=( SACST(I,J,3) + SACST(I,J,4) + SACST(I,J,5) )
-                  noahlower=(SMC(I,J,3)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,3)*1000+(SMC(I,J,4)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,4)*1000
+                  noahlower=(SMC(I,J,3)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,3)*1000.0+(SMC(I,J,4)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,4)*1000.0
                   write(*,*)'Cont:saclower noahlower',saclower,noahlower
                   sacupper=( FRZST(I,J,6) + FRZST(I,J,7) )
-                  noahupper=(SH2O(I,J,1)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,1)*1000+(SH2O(I,J,2)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,2)*1000
+                  noahupper=(SH2O(I,J,1)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,1)*1000.0+(SH2O(I,J,2)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,2)*1000.0
                   write(*,*)'Liq:sacupper noahupper',sacupper,noahupper
                   saclower=( FRZST(I,J,8) + FRZST(I,J,9) + FRZST(I,J,10) )
-                  noahlower=(SH2O(I,J,3)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,3)*1000+(SH2O(I,J,4)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,4)*1000
+                  noahlower=(SH2O(I,J,3)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,3)*1000.0+(SH2O(I,J,4)-WLTSMC(SOILTYP(I)))*SOILDEPTH(I,4)*1000.0
                   write(*,*)'Liq:saclower noahlower',saclower,noahlower
                   write(*,*) '0.SMC:',(SMC(I,J,K),K=1,4)
                   write(*,*) '0.SH2O:',(SH2O(I,J,K),K=1,4)
-                  write(*,*) '0.SoilMoist:',(SoilMoist(I,K),K=1,4)
                   write(*,*) '0.SACST:',(SACST(I,J,K),K=1,5)
                   write(*,*) '0.FRZST:',(FRZST(I,J,K+5),K=1,5)
 
@@ -580,9 +642,9 @@ PROGRAM noah
                      SOILMOIST_total_band = SOILMOIST_total_band + SMC(I,J,K)*SOILDEPTH(I,K)*1000.0
                   END DO
                   CMC_total_band = 0
-                  CMC_total_band = CMC_total_band + CMC(I,J) * 1000
+                  CMC_total_band = CMC_total_band + CMC(I,J) * 1000.0
                   SWE_band = SNEQV(I,J)*1000.0
-                  PackWater_band = PACH20(I,J)*1000
+                  PackWater_band = PACH20(I,J)*1000.0
                   EC1_band = EC1_band/LVH2O
                   EDIR1_band = EDIR1_band/LVH2O
                   ETT1_band = ETT1_band/LVH2O
@@ -639,7 +701,8 @@ PROGRAM noah
                ! write(*,*)'prcp',DT_PRCP_band,'stc',STC(I,J,:)
                ! write(*,*)'before ',I,J,SMC(I,J,:),STC(I,J,:)
                if (prflag==1) then ! wb error before call to sflx doesn't make sense, so it was removed in favor of wb_error *across*  sflx
-                  write(*,*)'date:',year,month,day,hour
+                  write(*,*)'ABOVE SFLX'
+                  write(*,*)'Date:',year,month,day,hour
                   write(*,*)'cell',I,'band',J,' model time step of',MODEL_DT_REAL,'sec'
                   write(*,*)'FORCING STEP',FORCING_STEP,'MODEL STEP',MODEL_STEP,'MODEL STEP COUNT',MODEL_STEP_COUNT,'OUTPUT STEP',OUTPUT_STEP
                   write(*,*)
@@ -650,12 +713,13 @@ PROGRAM noah
                   write(*,*)
                   write(*,*)'Soil Moisture'
                   DO K = 1, NSOIL(I)
-                     WRITE(*,*)'SMC(I,J,K)*SOILDEPTH(I,K)*1000.0',SMC(I,J,K),SOILDEPTH(I,K),(SMC(I,J,K)*SOILDEPTH(I,K)*1000)
+                     WRITE(*,*)'SMC(I,J,K)*SOILDEPTH(I,K)*1000.0',SMC(I,J,K),SOILDEPTH(I,K),(SMC(I,J,K)*SOILDEPTH(I,K)*1000.0)
                   END DO
                endif
 
                if (prflag == 1) then
                   write(*,*)'cell id',I,'model step',MODEL_STEP_COUNT,'month',month,'day',day
+                  write(*,*)'iswe0 SNEQV(I,J)',SWE_save_band,SNEQV(I,J)
                endif
                if(prflag==1) write(*,*)'##p',MODEL_STEP_COUNT,DT_PRCP_BAND,(dt_prcp_band*model_dt)
                CALL SFLX ( &
@@ -737,12 +801,15 @@ PROGRAM noah
                DO K = 1, NSOIL(I)
                   SOILMOIST_total_band = SOILMOIST_total_band + SMC(I,J,K)*SOILDEPTH(I,K)*1000.0
                END DO
+               ADIMC_band = SACST(I,J,6)
                CMC_total_band = 0
-               CMC_total_band = CMC_total_band + CMC(I,J) * 1000
+               CMC_total_band = CMC_total_band + CMC(I,J) * 1000.0
                SWE_band = SNEQV(I,J)*1000.0
-               PackWater_band = PACH20(I,J)*1000
+               PackWater_band = PACH20(I,J)*1000.0
                if (prflag==1) write(*,*)'EC1_band EDIR1_band ETT1_band'
                if (prflag==1) write(*,*),EC1_band,EDIR1_band,ETT1_band
+               if(prflag==1)write(*,*)'fswe SNEQV(I,J)',SWE_band,SNEQV(I,J)
+!CBL2014 Notice these were passed as W/m^2 and here converted to mm/s
                EC1_band = EC1_band/LVH2O
                EDIR1_band = EDIR1_band/LVH2O
                ETT1_band = ETT1_band/LVH2O
@@ -766,6 +833,29 @@ PROGRAM noah
                ! Water balance error check
                !            wb_error = (RAIN_band + SNOW_band - EVAP_band - RUNOFF1_band - RUNOFF2_band)*MODEL_DT_REAL + SWE_band - SWE_save_band + SOILMOIST_total_band - SOILMOIST_save_band + CMC_total_band - CMC_save_band
                !            temp1 = (RAIN_band + SNOW_band)*MODEL_DT_REAL
+               if(prflag==1) then
+                  rainf_value = rainf_value + (DT_PRCP_band)*MODEL_DT_REAL*RAIN_ratio*band_area(I,J)
+                  snowf_value = snowf_value + (DT_PRCP_band)*MODEL_DT_REAL*SNOW_ratio*band_area(I,J)
+                  prcp_value = prcp_value + (DT_PRCP_band)*MODEL_DT_REAL*band_area(I,J)
+                  evap_value = evap_value + (EVAP_band)*MODEL_DT_REAL*band_area(I,J)
+                  qs_value = qs_value + (RUNOFF1_band)*MODEL_DT_REAL*band_area(I,J)
+                  qsb_value = qsb_value + (RUNOFF2_band)*MODEL_DT_REAL*band_area(I,J)
+                  sm_change_sum = sm_change_sum + (SOILMOIST_total_band - SOILMOIST_save_band)*band_area(I,J)
+!                  swe_change_sum = swe_change_sum + (SWE_band*SNCOVR(I,J) - SWE_save_band*SNCOVR(I,J))*band_area(I,J)
+                  swe_change_sum = swe_change_sum + (SWE_band - SWE_save_band)*band_area(I,J)
+                  cmc_change_sum = cmc_change_sum + (CMC_total_band - CMC_save_band)*band_area(I,J)
+                  write(*,*)'swe_change_sum = swe_change_sum + (SWE_band*SNCOVR(I,J) - SWE_save_band*SNCOVR(I,J))*band_area(I,J)'
+                  write(*,*)'swe_change_sum SWE_band SNCOVR(I,J) SWE_save_band SNCOVR(I,J)) band_area(I,J)'
+                  write(*,*)swe_change_sum,SWE_band,SNCOVR(I,J),SWE_save_band,SNCOVR(I,J),band_area(I,J)
+                  write(*,*)'xxswe_change',swe_change_sum,((SWE_band*SNCOVR(I,J) - SWE_save_band*SNCOVR(I,J))*band_area(I,J))
+                  write(*,*)'rainf_value,snowf_value,prcp_value'
+                  write(*,*)rainf_value,snowf_value,prcp_value
+                  write(*,*)'evap_value,qs_value,qsb_value'
+                  write(*,*)evap_value,qs_value,qsb_value
+                  write(*,*)'sm_change_sum,swe_change_sum,cmc_change_sum'
+                  write(*,*)sm_change_sum,swe_change_sum,cmc_change_sum
+                  write(*,*)'band_area(I,J)',band_area(I,J)
+               endif
                temp1 = (DT_PRCP_band)*MODEL_DT_REAL
                temp2 = (EVAP_band)*MODEL_DT_REAL
                temp3 = (RUNOFF1_band + RUNOFF2_band)*MODEL_DT_REAL
@@ -773,24 +863,49 @@ PROGRAM noah
                temp5 = SWE_save_band
                temp6 = SOILMOIST_total_band
                temp7 = SOILMOIST_save_band
-               !               temp8 = SWE_band*SNCOVR(I,J) - SWE_save_band*SNCOVR_save_band
+               temp8 = SWE_band*SNCOVR(I,J) - SWE_save_band*SNCOVR_save_band
                ! BL2014--do not use the snow cover fraction from the previous time step, this was originally done to handle the case where SWE melts out
                ! BL2014--but this is better handled here simply using the start of time step snow coverage, since SNCOVR is computed once in SFLX
-               temp8 = SWE_band*SNCOVR(I,J) - SWE_save_band*SNCOVR(I,J)
+!               temp8 = SWE_band*SNCOVR(I,J) - SWE_save_band*SNCOVR(I,J)
                temp9 = SOILMOIST_total_band - SOILMOIST_save_band
                temp10 = CMC_total_band
                temp11 = CMC_save_band
                temp13 = CMC_total_band - CMC_save_band
-               product = temp8
+!               product = temp8
+               product = SWE_band - SWE_save_band
+               temp14 = SWE_band*SNCOVR(I,J) - SWE_save_band*SNCOVR_save_band
+               temp15 = temp9*0.999+(ADIMC_band-ADIMC_save_band)*0.001
                wb_error = temp1 - temp2 - temp3 - product - temp9 - temp13
+! BL--scaling error by PCTIM area is not correct
+!               altwb_error = temp1 - temp2 - temp3 - product - temp9 - temp13
                if (prflag==1) then
                   write(*,*)'BELOW SFLX WB_ERROR',wb_error
-                  write(*,*)'temp1',temp1,'temp2',temp2,'temp3',temp3
-                  write(*,*)'temp8',temp8,'temp9',temp9,'temp13',temp13
+                  write(*,*)'XXtemp1',temp1,'temp2',temp2,'temp3',temp3
+                  write(*,*)'XXtemp8',temp8,'temp9',temp9,'temp13',temp13
                   write(*,*)'temp4',temp4,'temp5',temp5,'temp6',temp6
                   write(*,*)'temp7',temp7,'temp10',temp10,'temp11',temp11
                   write(*,*)'SWE_band SWE_save_band sncovr sncovr_save SWE*sncovr SWE_save*sncovr',SWE_band,SWE_save_band,SNCOVR(I,J),SNCOVR_save_band,(SWE_band*SNCOVR(I,J)),(SWE_save_band*SNCOVR_save_band)
+                  write(*,*)'xxswe SNEQV(I,J)',temp8,SNEQV(I,J)
                end if
+               if(prflag==1)then
+                  temp1_sum=temp1_sum+temp1*band_area(I,J)
+                  temp2_sum=temp2_sum+temp2*band_area(I,J)
+                  temp3_sum=temp3_sum+temp3*band_area(I,J)
+                  temp4_sum=temp4_sum+temp4*band_area(I,J)
+                  temp5_sum=temp5_sum+temp5*band_area(I,J)
+                  temp6_sum=temp6_sum+temp6*band_area(I,J)
+                  temp7_sum=temp7_sum+temp7*band_area(I,J)
+!                  temp8_sum=temp8_sum+temp8*band_area(I,J)
+! cbl correct sncovr
+                  temp8_sum=temp8_sum+product*band_area(I,J)
+                  write(*,*)'xxswe temp8_sum',temp8_sum
+                  temp9_sum=temp9_sum+temp9*band_area(I,J)
+                  temp10_sum=temp10_sum+temp10*band_area(I,J)
+                  temp11_sum=temp11_sum+temp11*band_area(I,J)
+                  temp12_sum=temp12_sum+temp12*band_area(I,J)
+                  temp13_sum=temp13_sum+temp13*band_area(I,J)
+                  temp14_sum=temp14_sum+temp14*band_area(I,J)
+               endif
                ! Ben had this at 0.1... lots of times that is exceeded and log file gets too big so increased to 0.5 threshold.
                !               if (wb_error*wb_error > 0.5) then
                !                  write(*,*)'###cell wb_error',I,wb_error,SWE_band,SNCOVR(I,J)
@@ -814,7 +929,7 @@ PROGRAM noah
                   write(*,*)
                   write(*,*)'Soil Moisture'
                   DO K = 1, NSOIL(I)
-                     WRITE(*,*)'SMC(I,J,K)*SOILDEPTH(I,K)*1000.0',SMC(I,J,K),SOILDEPTH(I,K),(SMC(I,J,K)*SOILDEPTH(I,K)*1000)
+                     WRITE(*,*)'SMC(I,J,K)*SOILDEPTH(I,K)*1000.0',SMC(I,J,K),SOILDEPTH(I,K),(SMC(I,J,K)*SOILDEPTH(I,K)*1000.0)
                   END DO
                end if
 
@@ -856,10 +971,11 @@ PROGRAM noah
                RUNOFF3(I) = RUNOFF3(I) + RUNOFF3_band*band_area(I,J)
                if (prflag==1) then
                   write(*,*)'###cummulative variable counters'
+                  write(*,*)'XXMODEL_STEP',MODEL_STEP
                   write(*,*)'band area',i,j,band_area(i,j)
                   write(*,*)'ETA(I) =', ETA(I) 
                   write(*,*)'H(I) =', H(I)
-                  write(*,*)'EVAP_total(I) =', EVAP_total(I)
+                  write(*,*)'XXEVAP_total(I) =', EVAP_total(I)
                   write(*,*)'EC1(I) =', EC1(I)
                   write(*,*)'EDIR1(I) =', EDIR1(I)
                   write(*,*)'ET(I,:) =', ET(I,:)
@@ -874,8 +990,8 @@ PROGRAM noah
                   write(*,*)'FLX2(I) =', FLX2(I)
                   write(*,*)'FLX3(I) =', FLX3(I)
                   write(*,*)'SNOMLT(I) =', SNOMLT(I)
-                  write(*,*)'RUNOFF1(I) =', RUNOFF1(I)
-                  write(*,*)'RUNOFF2(I) =', RUNOFF2(I)
+                  write(*,*)'XXRUNOFF1(I) =', RUNOFF1(I)
+                  write(*,*)'XXRUNOFF2(I) =', RUNOFF2(I)
                   write(*,*)' RUNOFF3(I) =', RUNOFF3(I)
                endif
                ! State variables
@@ -899,27 +1015,30 @@ PROGRAM noah
                Albedo_ALMA(I) = Albedo_ALMA(I) + ALB_TOT_band*band_area(I,J)
                ! BL2014 --> Need multiply incremental SWE, SNEQV(I,J), by it's fractional 
                ! coverage, SNCOVR(I,J), to preserve the water balance
-               !               SWE(I) = SWE(I) + SNEQV(I,J)*1000.0*band_area(I,J)
-               SWE(I) = SWE(I) + SNEQV(I,J)*1000.0*band_area(I,J)*SNCOVR(I,J)
-               if (prflag==1)write(*,*)'SWE(I) =',SWE(I)
+               SWE(I) = SWE(I) + SNEQV(I,J)*1000.0*band_area(I,J)
+!               SWE(I) = SWE(I) + SNEQV(I,J)*1000.0*band_area(I,J)*SNCOVR(I,J)
+               if (prflag==1)write(*,*)'XXSWE(I) =',SWE(I),SNEQV(I,J),band_area(I,J),SNCOVR(I,J)
+               if (prflag==1)write(*,*)'xxswe(i)',(SNEQV(I,J)*1000.0*band_area(I,J)*SNCOVR(I,J))
                UZTWC(I) = UZTWC(I) + SACST(I,J,1)*band_area(I,J)
                UZFWC(I) = UZFWC(I) + SACST(I,J,2)*band_area(I,J)
                LZTWC(I) = LZTWC(I) + SACST(I,J,3)*band_area(I,J)
                LZFSC(I) = LZFSC(I) + SACST(I,J,4)*band_area(I,J)
                LZFPC(I) = LZFPC(I) + SACST(I,J,5)*band_area(I,J)
-               PackWater(I) = PackWater(I) + PACH20(I,J) * 1000 * band_area(I,J)
+               PackWater(I) = PackWater(I) + PACH20(I,J) * 1000.0 * band_area(I,J)
                CanopInt(I) = CanopInt(I) + CMC(I,J)*1000.0*band_area(I,J)
+               if (prflag==1)write(*,*)'XXCanopInt(I) =',CanopInt(I)
                if (T1(I,J) < TFREEZ) then
                   SWEVeg(I) = SWEVeg(I) + CMC(I,J)*1000.0*band_area(I,J)
                end if
                DO K = 1, NSOIL(I)
                   SoilMoist(I,K) = SoilMoist(I,K) + SMC(I,J,K)*SOILDEPTH(I,K)*1000.0*band_area(I,J)
+                  if (prflag==1)write(*,*)'SoilMoist(I,K) SMC(I,J,K)*SOILDEPTH(I,K)*1000.0*band_area(I,J)'
+                  if (prflag==1)write(*,*)SoilMoist(I,K),SMC(I,J,K),SOILDEPTH(I,K),band_area(I,J)
                   SoilTemp(I,K)  = SoilTemp(I,K) + STC(I,J,K)*band_area(I,J)
                   SMLiqFrac(I,K)  = SMLiqFrac(I,K) + SH2O(I,J,K)/SMC(I,J,K)*band_area(I,J)
                   SMFrozFrac(I,K)  = SMFrozFrac(I,K) + (SMC(I,J,K)-SH2O(I,J,K))/SMC(I,J,K)*band_area(I,J)
                   SoilWet(I) = SoilWet(I) + ( (SMC(I,J,K)-W_WILT(I)) / (W_SAT(I)-W_WILT(I)) )*(SOILDEPTH(I,K)/SOILDEPTH_ACCUM(I,MAXNSOIL))*band_area(I,J)
                END DO
-               if (prflag==1)write(*,*)'SoilMoist(I,K) =',SoilMoist(I,K)
                DO K = 1, 5
                   SoilMoistSac(I,K) = SoilMoistSac(I,K) + SACST(I,J,K)*band_area(I,J)
                ENDDO
@@ -932,6 +1051,7 @@ PROGRAM noah
                   write(*,*) '0.FRZST:',(FRZST(I,J,K+5),K=1,5)
                endif
                SoilMoistTotal(I)=SoilMoistTotal(I)+SOILMOIST_total_band*band_area(I,J)
+               if (prflag==1)write(*,*)'XXSoilMoistTotal(I)',SoilMoistTotal(I)
                RootMoist(I) = RootMoist(I) + (SOILW_band - W_WILT(I))*SOILDEPTH_ACCUM(I,MAXNSOIL)*1000.0*band_area(I,J)
                SnowDepth(I) = SnowDepth(I) + SNOWH(I,J)*band_area(I,J)
                SnowFrac(I) = SnowFrac(I) + SNCOVR(I,J)*band_area(I,J)
@@ -944,7 +1064,9 @@ PROGRAM noah
                ! Misc
                LWnet_model_step(I) = LWnet_model_step(I)+(DT_LWDN(I)-SIGMA*T1(I,J)**4.0)*band_area(I,J)
                Snowf_model_step(I) = Snowf_model_step(I)+DT_PRCP_band*SNOW_ratio*band_area(I,J)
+               if (prflag==1)write(*,*)'XXSnowf_model_step(I)',Snowf_model_step(I)
                Rainf_model_step(I) = Rainf_model_step(I)+DT_PRCP_band*RAIN_ratio*band_area(I,J)
+               if (prflag==1)write(*,*)'XXRainf_model_step(I)',Rainf_model_step(I)
                !if(p==1)write(*,*)'rat',snow_ratio,rain_ratio
                if(p==1)write(*,*)'##sn',snowf_model_step(i),(DT_PRCP_band*SNOW_ratio*band_area(I,J))
                if(p==1)write(*,*)'##rn',rainf_model_step(i),(DT_PRCP_band*RAIN_ratio*band_area(I,J))
@@ -965,20 +1087,22 @@ PROGRAM noah
             if (prflag==1)write(*,*)'wb_error band_area',wb_error,band_area(I,J)
             wb_sum = wb_sum + wb_error
             partial_error=(wb_error*band_area(I,J))
+! BL--scaling error by PCTIM area is not correct
+!            partial_error=(altwb_error*band_area(I,J))
             if(prflag==1)write(*,*)'partial_error',partial_error
             wb_add = wb_add + partial_error
-!            if (prflag==1)write(*,*)'wb_sum = wb_sum + wb_error',wb_sum,wb_error
-!            if (prflag==1)write(*,*)'wb_add = wb_add + partial_error; band_area',wb_add,partial_error,band_area(I,J)
             if (prflag==1)write(*,*)'wb_sum = wb_sum + wb_error',wb_sum,wb_error
             if (prflag==1)write(*,*)'wb_add = wb_add + partial_error; band_area',wb_add,partial_error,band_area(I,J)
+            step_bal = step_bal + partial_error
+            if (prflag==1)write(*,*)'step_bal = step_bal + partial_error; band_area',step_bal,partial_error,band_area(I,J)
          END IF ! END HACK TO RUN ONLY ONE BAND CBL2014--> Leave this in place for if (band_area>0)
          END DO
          
          ! Normalize variables that have NODATA over part of the grid cell
          ! (if appropriate)
          SAlbedo(I) = SAlbedo(I)/band_area_with_snow(I)
-         SatSoil(I) = MAXSMC(SOILTYP(I))*SOILDEPTH_ACCUM(I,MAXNSOIL)*1000
-         WltSoil(I) = WLTSMC(SOILTYP(I))*SOILDEPTH_ACCUM(I,MAXNSOIL)*1000
+         SatSoil(I) = MAXSMC(SOILTYP(I))*SOILDEPTH_ACCUM(I,MAXNSOIL)*1000.0
+         WltSoil(I) = WLTSMC(SOILTYP(I))*SOILDEPTH_ACCUM(I,MAXNSOIL)*1000.0
          SnowT(I) = SnowT(I)/band_area_with_snow(I)
          !Ben Livneh track effective snowpack temp TPACK = SnowTProf and liquid water PACH20 fraction SliqFrac
          SnowTProf(I) = SnowTProf(I)/band_area_with_snow(I)
@@ -1093,7 +1217,7 @@ PROGRAM noah
 
 !      end if ! SINGLECELL DEBUG HACK CBL2014
 
-     END DO
+      END DO
       !$OMP END PARALLEL DO
       
       IF (MODEL_STEP_COUNT == OUTPUT_STEP_RATIO) THEN
@@ -1117,7 +1241,7 @@ PROGRAM noah
         EvapSnow = 0.0
         SubSurf  = 0.0
 
-        ! Changes in storage terms
+        ! Changes in storage terms -- BL2014 these are arrays
         DelSurfHeat  = 0.0
         DelColdCont  = 0.0
         DelSoilMoist = SoilMoistTotal - SoilMoistTotal_old
@@ -1125,6 +1249,107 @@ PROGRAM noah
         DelSurfStor  = 0.0
         DelIntercept = CanopInt - CanopInt_old
 
+!BL 2014
+        sm_value=SoilMoistTotal(1)
+        swe_value=SWE(1)
+        cmc_value=CanopInt(1)
+
+        if(prflag==1)then 
+           write(*,*)'XXmodel_step_count',model_step_count,model_step
+           write(*,*)'XXsm_value',sm_value,DelSoilMoist(1)
+           write(*,*)'XXswe_value delswe swe swe_old',swe_value,DelSWE(1),SWE(1),SWE_old(1)
+           write(*,*)'XXcmc_value',cmc_value,DelIntercept(1)
+        endif
+! Take differences
+        swe_value_diff=(swe_value - swe_value1)
+        sm_value_diff=(sm_value - sm_value1)
+        cmc_value_diff=(cmc_value - cmc_value1)
+        if(prflag==1)then 
+           write(*,*)'swe_value_diff',swe_value_diff
+           write(*,*)'sm_value_diff',sm_value_diff
+           write(*,*)'cmc_value_diff',cmc_value_diff
+        endif
+! Print change sums, they should be equal
+        if(prflag==1) then
+           write(*,*)'sm_change_sum,swe_change_sum,cmc_change_sum'
+           write(*,*)sm_change_sum,swe_change_sum,cmc_change_sum
+        endif
+        if(prflag==1)then
+           write(*,*)'sm_value1',sm_value1
+           write(*,*)'swe_value1',swe_value1
+           write(*,*)'cmc_value1',cmc_value1
+        endif
+! Print accumualted fluxes and compare with outputs (i.e. to flux files)
+        if (prflag==1) then
+           write(*,*)'rainf_value,snowf_value,prcp_value'
+           write(*,*)rainf_value,snowf_value,prcp_value
+           write(*,*)'Rainf(1),Snowf(1)'
+           write(*,*)Rainf(1),Snowf(1)
+           write(*,*)'evap_value,qs_value,qsb_value'
+           write(*,*)evap_value,qs_value,qsb_value
+           write(*,*)'Evap(1),Qs(1),Qsb(1)'
+           write(*,*)Evap(1),Qs(1),Qsb(1)
+        endif
+! Print the value pairs, they should match
+        if(prflag==1) then
+           write(*,*)'Evap(1),evap_value',Evap(1),(evap_value/(MODEL_DT_REAL*OUTPUT_STEP_RATIO))
+           write(*,*)'Qs(1),qs_value',Qs(1),(qs_value/(MODEL_DT_REAL*OUTPUT_STEP_RATIO))
+           write(*,*)'Qsb(1),qsb_value',Qsb(1),(qsb_value/(MODEL_DT_REAL*OUTPUT_STEP_RATIO))
+           write(*,*)'Rainf(1),rainf_value',Rainf(1),(rainf_value/(MODEL_DT_REAL*OUTPUT_STEP_RATIO))
+           write(*,*)'Snowf(1),snowf_value',Snowf(1),(snowf_value/(MODEL_DT_REAL*OUTPUT_STEP_RATIO))
+           endif
+! Compute balances
+           if(prflag==1) then
+              sum_balance=rainf_value + snowf_value - evap_value - qs_value - qsb_value - sm_value_diff - swe_value_diff - cmc_value_diff
+              write(*,*)'sum_balance=rainf_value + snowf_value - evap_value - qs_value - qsb_value - sm_value_diff - swe_value_diff - cmc_value_diff'
+              write(*,*)sum_balance,rainf_value,snowf_value,evap_value,qs_value,qsb_value,sm_value_diff,swe_value_diff,cmc_value_diff
+              if(model_step_count==8) then
+                 sum_balance=rainf_value + snowf_value - evap_value - qs_value - qsb_value - DelSoilMoist(1) - swe_value_diff - cmc_value_diff
+                 write(*,*)'sum_balance=rainf_value + snowf_value - evap_value - qs_value - qsb_value - DelSoilMoist(1) - swe_value_diff - cmc_value_diff'
+                 write(*,*)sum_balance,rainf_value,snowf_value,evap_value,qs_value,qsb_value,DelSoilMoist(1),swe_value_diff,cmc_value_diff
+              endif
+
+              flux_balance = (Rainf(1)+Snowf(1)-Evap(1)-Qs(1)-Qsb(1))*(MODEL_DT_REAL*OUTPUT_STEP_RATIO)-DelSoilMoist(1)-DelSWE(1)-DelIntercept(1)
+              write(*,*)'flux_balance = (Rainf(1)+Snowf(1)-Evap(1)-Qs(1)-Qsb(1))*(MODEL_DT_REAL*OUTPUT_STEP_RATIO)-DelSoilMoist(1)-DelSWE(1)-DelIntercept(1)'
+              write(*,*)flux_balance,Rainf(1),Snowf(1),Evap(1),Qs(1),Qsb(1),MODEL_DT_REAL,OUTPUT_STEP_RATIO,DelSoilMoist(1),DelSWE(1),DelIntercept(1)
+! Compute balance with temp sums
+              temp_bal=temp1_sum-temp2_sum-temp3_sum-temp8_sum-temp9_sum-temp13_sum 
+              write(*,*)'temp_bal=temp1_sum-temp2_sum-temp3_sum-temp8_sum-temp9_sum-temp13_sum'
+              write(*,*)temp_bal,temp1_sum,temp2_sum,temp3_sum,temp8_sum,temp9_sum,temp13_sum
+              write(*,*)'temp14_sum',temp14_sum 
+! Reset accumulated values
+              rainf_value=0.0
+              snowf_value=0.0
+              prcp_value=0.0
+              evap_value=0.0
+              qs_value=0.0
+              qsb_value=0.0
+! Reset change sums
+              sm_change_sum=0.0
+              swe_change_sum=0.0
+              cmc_change_sum=0.0
+! BL set storage terms here for start of next time step
+              sm_value1=SoilMoistTotal(1)
+              swe_value1=SWE(1)
+              cmc_value1=CanopInt(1)
+              flux_balance=0.0
+              sum_balance=0.0
+! Reset temp_sums
+              temp1_sum=0.0
+              temp2_sum=0.0
+              temp3_sum=0.0
+              temp4_sum=0.0
+              temp5_sum=0.0
+              temp6_sum=0.0
+              temp7_sum=0.0
+              temp8_sum=0.0
+              temp9_sum=0.0
+              temp10_sum=0.0
+              temp11_sum=0.0
+              temp12_sum=0.0
+              temp13_sum=0.0
+              temp14_sum=0.0
+           endif
 
 !write(*,*)
 !write(*,*)'Cell 1'
@@ -1140,7 +1365,8 @@ PROGRAM noah
 
         ! Energy and Water Balance Check
         wb_error = wb_sum / landlen
-        wb_add = wb_add / landlen
+        wb_add_out = wb_add / landlen
+        step_bal = step_bal / landlen
 !        wb_error = 0
 !        eb_error = 0
 !        DO I = 1, landlen
@@ -1151,8 +1377,10 @@ PROGRAM noah
 !        eb_error = eb_error/landlen
         WRITE(*,*)
         WRITE(*,*)'OUTPUT STEP',OUTPUT_STEP,'FORCING STEP',FORCING_STEP
-        WRITE(*,*)'avg wb_error per cell:',wb_error,'mm',year,month,day
-        WRITE(*,*)'avg wb_error added per cell:',wb_add,'mm',year,month,day
+        !WRITE(*,*)'avg wb_error per cell:',wb_error,'mm',year,month,day
+        WRITE(*,*)'avg wb_error added per cell:',wb_add_out,'mm',year,month,day
+        if(prflag==1)WRITE(*,*)'avg wb_error per output step step_bal:',step_bal,'mm',year,month,day
+        step_bal=0.0
 !        WRITE(*,*)'avg eb_error per cell:',eb_error,'W/m2'
 !        wb_error = (Rainf(1) + Snowf(1) - Evap(1) - Qs(1) - Qsb(1)) * OUTPUT_DT - (DelIntercept(1) + DelSurfStor(1) + DelSWE(1) + DelSoilMoist(1))
 !        eb_error = (SWnet(1) + LWnet(1) - Qh(1) - Qle(1) - Qg(1) - Qf(1) - Qa(1)) - (DelSurfHeat(1) + DelColdCont(1))/OUTPUT_DT

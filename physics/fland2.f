@@ -1470,7 +1470,7 @@ c--      SE4=SE4+E4
 c--      SE5=SE5+E5
 C     CHECK THAT ADIMC.GE.UZTWC
       IF (ADIMC.LT.UZTWC) ADIMC=UZTWC
-      if(prflag==1)write(*,*)'IF(ADIMC.LT.UZTWC)ADIMC=UZTWC',ADIMC,UTWC
+      if(prflag==1)write(*,*)'IF(ADIMC.LT.UZTWC)ADIMC=UZTWC',ADIMC,UZTWC
 C
 c  Return back SAC states
       SACST(1)=UZTWC

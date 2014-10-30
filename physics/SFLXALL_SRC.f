@@ -381,7 +381,7 @@ C ----------------------------------------------------------------------
       real smctot0,sh2otot0,runtot,smctot,sh2otot,runtot0,smcdif,sh2odif
       real wcrit,psnow1,psnow2,richards,sacupper,noahupper,saclower
       real noahlower,etot,etot0,etotdif,cmc0,cmcdif,swe,swe0
-      real swedif,tsum,runtotdif
+      real swedif,tsum,runtotdif,sneqv0
 
 C ----------------------------------------------------------------------
 C DECLARATIONS - PARAMETERS
@@ -443,7 +443,8 @@ C ----------------------------------------------------------------------
      O     SHDFAC,SHDMAX,SHDMIN,RSMIN,RGL,HS,ZBOT,FRZX,PSISAT,SLOPE,
      +     SNUP,SALP,BEXP,DKSAT,DWSAT,SMCMAX,SMCWLT,SMCREF,
      O     SMCDRY,F1,QUARTZ,FXEXP,RTDIS,SLDPTH,ZSOIL,
-     +     NROOT,NSOIL,Z0,CZIL,XLAI,CSOIL,PTU,EMISS,EMISSNOW,MODEL_TYPE)
+     +     NROOT,NSOIL,Z0,CZIL,XLAI,CSOIL,PTU,EMISS,EMISSNOW,MODEL_TYPE,
+     O     prflag)
 
       XLAI1=XLAI
 
@@ -452,7 +453,8 @@ C  INITIALIZE PRECIPITATION LOGICALS.
 C ----------------------------------------------------------------------
       SNOWNG = .FALSE.
       FRZGRA = .FALSE.
-
+cbl2014
+      sneqv0=sneqv
 C ----------------------------------------------------------------------
 C IF SEA-ICE CASE, ASSIGN DEFAULT WATER-EQUIV SNOW ON TOP
 C ----------------------------------------------------------------------
@@ -528,10 +530,12 @@ C   SNOW THERMAL CONDUCTIVITY "SNCOND" (NOTE THAT CSNOW IS A FUNCTION
 C   SUBROUTINE)
 C ----------------------------------------------------------------------
       IF (SNEQV .EQ. 0.0) THEN
+         if(prflag==1)write(*,*)'SNEQV.EQ.0.0'
         SNDENS = 0.0
         SNOWH = 0.0
         SNCOND = 1.0
       ELSE
+         if(prflag==1)write(*,*)'SNEQV.GT.0.0'
         SNDENS = SNEQV/SNOWH
         SNCOND = CSNOW(SNDENS) 
       ENDIF
@@ -543,12 +547,21 @@ C IF IT'S PRCPING AND THE AIR TEMP IS WARMER THAN 0 C, BUT THE GRND
 C TEMP IS COLDER THAN 0 C, FREEZING RAIN IS PRESUMED TO BE FALLING.
 C ----------------------------------------------------------------------
       IF (PRCP .GT. 0.0) THEN
+         if(prflag==1)write(*,*)'PRCP.GT.0.0'
         IF (SFCTMP .LE. TFREEZ) THEN
 C        IF (FFROZP .GT. 0.5) THEN
             SNOWNG = .TRUE.
+            if(prflag==1)write(*,*)'SFCTMP.LE.TFREEZ',SFCTMP
+            if(prflag==1)write(*,*)'SNOWNG=.TRUE.'
          ELSE
             IF (T1 .LE. TFREEZ) FRZGRA = .TRUE.
+            if(prflag==1)write(*,*)'T1.LE.TFREEZ',SFCTMP
+            if(prflag==1)write(*,*)'FRZGRA=.TRUE.'
          ENDIF
+cbl2014
+         if(snowng.eq..false. .and. frzgra.eq..false.) then
+            if(prflag==1)write(*,*)'RAIN.ON.SNOW'
+         endif
       ENDIF
 
 C ----------------------------------------------------------------------
@@ -571,12 +584,20 @@ cbl --> PRCP1 goes to soil surface
 
       IF (SNEQV == 0.0.AND.SNOWNG.EQ..FALSE.) THEN
          FRZGRA = .FALSE.
+        if(prflag==1)write(*,*)'SNEQV == 0.0.AND.SNOWNG.EQ..FALSE.'
+        if(prflag==1)write(*,*)'set FRZGRA to .FALSE.'
       END IF
-      IF ( (SNOWNG) .OR. (FRZGRA) ) THEN
+cbl2014      IF ( (SNOWNG) .OR. (FRZGRA) ) THEN
+cbl2014      IF ( (SNOWNG.eq..true.) .OR. (FRZGRA.eq..true.) ) THEN
+      IF(SNOWNG.eq..true. .OR. FRZGRA.eq..true. .or.(SNEQV.gt.0.)) THEN
+         if(prflag==1)write(*,*)'SNOWNG or FRZGRA: SNEQV incremented'
         SN_NEW = PRCP * DT * 0.001
+        if(prflag==1)write(*,*)'SN_NEW pre-SNEQV',SN_NEW,SNEQV
         SNEQV = SNEQV + SN_NEW
+        if(prflag==1)write(*,*)'post-SNEQV',SNEQV
 C		WRITE(*,*)'SNEQV SN_NEW',SNEQV,SN_NEW
         PRCP1 = 0.0
+
 
 C ----------------------------------------------------------------------
 C UPDATE SNOW DENSITY BASED ON NEW SNOWFALL, USING OLD AND NEW SNOW.
@@ -594,6 +615,7 @@ C ANY CANOPY "DRIP" ADDED TO THIS LATER)
 C ----------------------------------------------------------------------
 cbl --> Precip not considered snow, send it to soil surface
         PRCP1 = PRCP
+        if(prflag==1)write(*,*)'RAIN-added to PRCP1',PRCP1
 
       ENDIF
 
@@ -907,10 +929,6 @@ C ----------------------------------------------------------------------
      &        CSOIL,FRZST,FRZPAR,SACST,SACPAR,BETA,DRIP,DEW,
      &        FLX1,FLX2,FLX3,EMISS,MODEL_TYPE,PRFLAG,CELLID,MSTEP,
      &        wcrit,richards)
-          if (prflag==1) then
-          write(*,*)'-----------sflx BELOW NOPAC------'
-          endif
-
       ELSE
          IF (MODEL_TYPE == 0.OR. MODEL_TYPE == 1) THEN
 C            CALL SNOPAC (ETP,ETA,PRCP,PRCP1,SNOWNG,SMC,SMCMAX,SMCWLT,
@@ -929,17 +947,13 @@ C     &        MODEL_TYPE,FRZST,FRZPAR,SACST,SACPAR,PRFLAG,CELLID,MSTEP)
      &           SBETA,DF1,PACH20,CH,SFCSPD,
      &           Q2,T1,TPACK,SFCTMP,T24,TH2,FDOWN,F1,SSOIL,STC,EPSCA,
      &           SFCPRS,BEXP,PC,RCH,RR,CFACTR,SNCOVR,SNEQV,SNDENS,
-     &           SNOWH,SH2O,SLOPE,KDT,FRZX,PSISAT,SNUP,
+     &           SNOWH,SH2O,SLOPE,KDT,FRZX,PSISAT,SNUP,SALP,
      &           ZSOIL,DWSAT,DKSAT,TBOT,ZBOT,SHDFAC,RUNOFF1,
      &           RUNOFF2,RUNOFF3,EDIR,EC,ET,ETT,NROOT,SNOMLT,
      &           ICE,RTDIS,QUARTZ,FXEXP,FX,CSOIL,BETA,DRIP,
      &           DEW,FLX1,FLX2,FLX3,ESNOW,EMISS,EMISSNOW,MODEL_TYPE,
      &           FRZST,FRZPAR,SACST,SACPAR,ERFLAG,PRFLAG,CELLID,MSTEP,
-     &           LVRAIN,wcrit,psnow2,richards)
-          if (prflag==1) then
-          write(*,*)'-----------sflx BELOW SNWPAC------'
-          endif
-
+     &           LVRAIN,wcrit,psnow2,richards,sneqv0)
          ELSE
             WRITE(*,*)'ABOVE TR_19'
             CALL TR_19 (ETP,ETA,PRCP,PRCP1,SNOWNG,FRZGRA,SMC,SMCMAX,
@@ -958,11 +972,7 @@ C     &        MODEL_TYPE,FRZST,FRZPAR,SACST,SACPAR,PRFLAG,CELLID,MSTEP)
 C     State and output variables for PEMB model
      &           NSNOW,DSNOW,PSNOW,RTTSNOW,RTTDTSNOW,WTSNOW,WTDTSNOW,
      &           TTSNOW,TTDTSNOW,prflag)
-!            WRITE(*,*)'BELOW TR_19'
-          if (prflag==1) then
-          write(*,*)'-----------sflx BELOW TR_19------'
-          endif
-
+            WRITE(*,*)'BELOW TR_19'
          ENDIF
 C     ESNOW = ETA
       ENDIF
@@ -976,7 +986,7 @@ CBL2014 moved this to outside SFLX and subtracted DEW from total ET
 c      PRCP = PRCP + (DEW * 1000)
 
       if (prflag==1) then
-CMS   write(*,*)'-----------sflx BELOW NOPAC------'
+      write(*,*)'-----------sflx BELOW NOPAC------' 
       tsum=0;
       DO K=1,4
          tsum=tsum+et(K)
@@ -1110,7 +1120,7 @@ CBL both snow covered and snow-free cases at once (e.g. * 1000)
 
       write(*,*)'--------------------------------' 
       endif
-
+CBL ET components = [m/s]. First convert to mm/s, then *LVH2O
       EDIR = (EDIR * 1000) * LVH2O
       EC = (EC * 1000) * LVH2O
       DO K=1,4
@@ -1119,24 +1129,25 @@ CBL both snow covered and snow-free cases at once (e.g. * 1000)
       ETT = (ETT * 1000) * LVH2O
 CBL multiply by the 'L' that was used to obtain ESNOW
       IF (LVRAIN .EQ. .TRUE.) THEN
-CMS        write(*,*)'LVRAN-TRUE'
+          if (prflag==1)write(*,*)'LVRAN-TRUE'
          ESNOW = (ESNOW * 1000) * LVH2O
       ELSE
-CMS        write(*,*)'LVRAN-FALSE'
+         if (prflag==1)write(*,*)'LVRAN-FALSE'
          ESNOW = (ESNOW * 1000) * LSUBS
       ENDIF
 CBL      ETP = ETP*((1.-SNCOVR)*LVH2O + SNCOVR*LSUBS)
+CBL ETP = [mm/s]
       ETP = ETP*LVH2O
       IF (ETP .GT. 0.) THEN
-CMS        write(*,*)'ETP-GT0'
+         if (prflag==1)write(*,*)'ETP-GT0'
         ETA = EDIR + EC + ETT + ESNOW
       ELSE
-CMS        write(*,*)'ETP-LT0'
+          if (prflag==1)write(*,*)'ETP-LT0'
         ETA = ETP * (1 - SNCOVR) + ESNOW
       ENDIF
       BETA = ETA/ETP
 CMS
-CMS      write(*,*)'eta ',ETA,' etp ',ETP,' beta ',BETA
+      if (prflag==1)write(*,*)'eta ',ETA,' etp ',ETP,' beta ',BETA
 
       if (prflag==1) then
       write(*,*)'sflxlv edir ec ett esnow eta etp'
@@ -1732,6 +1743,7 @@ C UNIT VOLUME MEASUREMENT) IS A DEPENDENT VARIABLE THAT IS UPDATED WITH
 C PROGNOSTIC EQNS. THE CANOPY MOISTURE CONTENT (CMC) IS ALSO UPDATED.
 C FROZEN GROUND VERSION:  NEW STATES ADDED: SH2O, AND FROZEN GROUND
 C CORRECTION FACTOR, FRZFACT AND PARAMETER SLOPE.
+CBL2014 expects ETP1 in [m/s] .:, ET components also in m/s
 C ----------------------------------------------------------------------
       INTEGER NSOLD
       PARAMETER(NSOLD = 20)
@@ -1839,8 +1851,7 @@ C ----------------------------------------------------------------------
         IF (SHDFAC.GT.0.0) THEN
 
          CALL TRANSP(ET1,NSOIL,ETP1,SH2O,STC,CMC,ZSOIL,SHDFAC,SMCWLT,
-     &                 CMCMAX,PC,CFACTR,SMCREF,SFCTMP,Q2,NROOT,RTDIS,
-     &                 prflag)
+     &          CMCMAX,PC,CFACTR,SMCREF,SFCTMP,Q2,NROOT,RTDIS,prflag)
 
           DO K = 1,NSOIL
             ETT1 = ETT1 + ET1(K)
@@ -2732,7 +2743,7 @@ C ----------------------------------------------------------------------
 
 C ----------------------------------------------------------------------
 C IF ETP < 0, ASSUME DEW FORMS (TRANSFORM ETP1 INTO DEW AND REINITIALIZE
-C ETP1 TO ZERO).
+C ETP1 TO ZERO). CBL --> PRCP1,ETP1,DEW = [m/s]
 C ----------------------------------------------------------------------
         DEW = -ETP1
         if (prflag==1) then
@@ -3854,7 +3865,8 @@ C ----------------------------------------------------------------------
       real tempdiff1(4),tempdiff2(4),richards,smcstress,stress
       real stotmax,tsum,etot0,etot,edtotdif,cmc0,cmcdif,etotdif
       real rundif,swe0,swe,swedif,noahupper,runtotdif,smctotdif
-      real noahlower,sacupper,saclower,sh2ototdif
+      real noahlower,sacupper,saclower,sh2ototdif,pctim,adimc
+      real altsactot0,altsactot
 
 C ----------------------------------------------------------------------
 C EXECUTABLE CODE BEGINS HERE.
@@ -3898,7 +3910,10 @@ C ----------------------------------------------------------------------
       frztot0=sacupper+saclower
       write(*,*)'smctot0 sh2otot0',smctot0,sh2otot0
       write(*,*)'sactot0 frztot0',sactot0,frztot0
-
+      adimc=sacst(6)
+      pctim=sacpar(4)
+      altsactot0=sactot0*(1.-pctim)+adimc*pctim
+      write(*,*)'altsactot0 pctim adimc',altsactot0,pctim,adimc
       write(*,*)'prcp1           edir1            ec1'
       write(*,*)prcp1,edir1,ec1
       write(*,*)'eta1 etp1',eta1,etp1
@@ -4403,6 +4418,15 @@ C     &     IFRZE,TA,LWE,WE,ISC,SNCOVR,SACPAR,SACST)
          DS = sactotdif
          BAL = PXV-TET-SURF-GRND-DS
          write(*,*)'balance post fland BAL',BAL
+         write(*,*)'PXV-TET-SURF-GRND-DS'
+         write(*,*)PXV,TET,SURF,GRND,DS
+cbl Do an alternative balance with a different DS
+         adimc=sacst(6)
+         altsactot=sactot*(1.-pctim)+adimc*pctim
+         write(*,*)'altsactot pctim adimc',altsactot0,pctim,adimc  
+         DS = altsactot-altsactot0
+         BAL = PXV-TET-SURF-GRND-DS
+         write(*,*)'altbalance post fland BAL',BAL
          write(*,*)'PXV-TET-SURF-GRND-DS'
          write(*,*)PXV,TET,SURF,GRND,DS
          write(*,*)'--------------------------------' 
@@ -5819,13 +5843,13 @@ C ----------------------------------------------------------------------
      &     SBETA,DF1,PACH20,CH,SFCSPD,
      &     Q2,T1,TPACK,SFCTMP,T24,TH2,FDOWN,F1,SSOIL,STC,EPSCA,
      &     SFCPRS,BEXP,PC,RCH,RR,CFACTR,SNCOVR,ESD,SNDENS,
-     &     SNOWH,SH2O,SLOPE,KDT,FRZFACT,PSISAT,SNUP,
+     &     SNOWH,SH2O,SLOPE,KDT,FRZFACT,PSISAT,SNUP,SALP,
      &     ZSOIL,DWSAT,DKSAT,TBOT,ZBOT,SHDFAC,RUNOFF1,
      &     RUNOFF2,RUNOFF3,EDIR,EC,ET,ETT,NROOT,SNOMLT,
      &     ICE,RTDIS,QUARTZ,FXEXP,FX,CSOIL,BETA,DRIP,
      &     DEW,FLX1,FLX2,FLX3,ESNOW,EMISS,EMISSNOW,MODEL_TYPE,
      &     FRZST,FRZPAR,SACST,SACPAR,ERFLAG,PRFLAG,CELLID,MSTEP,
-     &     LVRAIN,wcrit,psnow2,richards)
+     &     LVRAIN,wcrit,psnow2,richards,sneqv0)
 
       IMPLICIT NONE
 
@@ -5935,6 +5959,9 @@ C ----------------------------------------------------------------------
       INTEGER MODEL_TYPE,PRFLAG,CELLID,MSTEP,SMCFLAG
       real swe0,swe,swe1,swedif,bal,swe2,wcrit,psnow2,richards
       real SNCOVR0
+      real mmbal,dswe,dprcp,dprcp1,desnow2,iswe,iprcp
+      real iprcp1,iesnow2,fswe,fprcp,fprcp1,fesnow2,sneqv0,iswe0,delme
+      real delme2,dnsnow
 
       PARAMETER(CP = 1004.5)
       PARAMETER(CPH2O = 4.218E+3)
@@ -5977,11 +6004,34 @@ C (1973: Algorithms for Minimization without Derivatives).
 C Author: Ben Livneh -- Univ. of Wash.
 C Last modified: 12/9/2009
 C ----------------------------------------------------------------------
+
+cbl2014 recall that before the call to SNWPAC the prcp is added to 
+cbl2014 SNEQV, which here is called esd
+cbl2014>from sflx        SN_NEW = PRCP * DT * 0.001
+cbl2014>from sflx        SNEQV = SNEQV + SN_NEW
       swe0 = 0
       swe0 = esd
       if (prflag==1) then
          write(*,*)'-----------TOP OF SNWPAC----------------'
+cbl2014 sneqv0 is the swe before the sflx addition of prcp
+         iswe0=sneqv0*1000.0
+cbl2014 convert everything to mm
+         iswe=esd*1000.0
+         iprcp=prcp*DT
+         iprcp1=prcp1*DT
+         iesnow2=esnow2*DT
+         write(*,*)'iswe0 iswe iprcp'
+         write(*,*)iswe0,iswe,iprcp
+         delme=iswe-iswe0
+cbl2014 delme2 should be zero unless rain-on-snow case
+cbl2014 ensure prcp added in sflx is correctly removed
+         delme2=delme-iprcp
+         write(*,*)'iswediff iprcp',delme,iprcp
+         write(*,*)'net-zero',delme2
+         write(*,*)'iswe,iprcp,iprcp1,iesnow2'
+         write(*,*)iswe,iprcp,iprcp1,iesnow2
          write(*,*)'snwpac swe0 prcp prcp1',swe0,prcp,prcp1
+         write(*,*)'----------------------------------------'         
       endif
 C Any precip over non-snow area will be passed to SMFLX as an input (M/S)
 cbl PRCP0 = total precip volume over time step
@@ -5992,12 +6042,21 @@ cbl PRCP2 = total precip volume over snow
 CBL2014 PRCP1 is the *non-snow-covered area* actually should
 CBL2014 be multiplied by PRCP not PRCP1, so the following is
 CBL2014 incorrect
-CBL2014      PRCP1 = PRCP1*0.001 * (1 - SNCOVR)
-      PRCP1 = PRCP*0.001 * (1 - SNCOVR)
+cbl2014      PRCP1 = PRCP1*0.001 * (1 - SNCOVR)
+cbl2014 For consistency with NOPAC, PRCP1, ETP1, DEW = [m/s]
+      PRCP1 = PRCP1*0.001
+cbl2014      PRCP1 = PRCP*0.001 * (1 - SNCOVR)
+cbl2014-consider that the full prcp is added to SNEQV in sflx
+cbl2014-in which case, nothing should go to snow free area
+cbl2014-in effect the prcp1 should be zero here, or at least self 
+cbl2014-defined (1st version). now i need to update the logic on this.
+cbl2014 make this change and follow the melt logic through, if as is 
+c that the whole pack melts (fswe=0) then ex should add to this value
       SNCOVR0=SNCOVR
 cbl      PRCP1 = (PRCP / 1000) * (1 - SNCOVR)
       if (prflag==1) then
          totalmoist=swe0+prcp
+         write(*,*)'prcp1*0.001(1-sncovr)',prcp1,(prcp1*1000.*dt)
          write(*,*)'totalmoist',totalmoist,swe0,prcp,prcp1
          write(*,*)'INITIAL SNCOVR SNCOVR0',SNCOVR,SNCOVR0
       endif
@@ -6023,7 +6082,8 @@ cbl2014 right here.
 C ----------------------------------------------------------------------
 C IF ETP<0 (DOWNWARD) THEN DEWFALL (=FROSTFALL IN THIS CASE).
 C When ETP<0 all ET components are zero, and EDMND will be constrained
-C to zero in SMFLX if it is negative. Dew (M/S) added below to prcp.
+C to zero in SMFLX if it is negative. 
+CBL For consistency, ensure DEW,PRCP1,ETComponents = [M/S]
 C ----------------------------------------------------------------------
       DEW = 0.0
       DEWNS = 0.0
@@ -6032,11 +6092,18 @@ C ----------------------------------------------------------------------
         DEWNS = -ETP1 * (1 - SNCOVR)
         ESNOW2 = ETP1 * DT
         ETANRG = ETP*((1.-SNCOVR)*LSUBC + SNCOVR*LSUBS)
+        if (prflag==1)then
+           write(*,*)'dewns etp1 etp esnow2 sncovr'
+           write(*,*)dewns,etp1,etp,esnow2,sncovr
+cbl2014 DEWNS = [m/s], ESNOW2 = [m]. However, ESNOW2 is recalculated
+cbl2014 in SEB and that value is used for DEWS (Dew or E over snow)
+        endif
       ELSE
 C ----------------------------------------------------------------------
 C When ETP>0, ET components are computed/scaled by SNCOVR (exception: 
 C EDIR will be 0 for SAC case, to be recomputed by the ETP passed to 
-C SMFLX, which will be scaled by SNCOVR therein)
+C SMFLX, which will be scaled by SNCOVR therein). Notice ETP1 [m/s]
+CBL is passed to EVAPO
 C ----------------------------------------------------------------------
         IF (ICE .NE. 1) THEN
           IF (SNCOVR .LT. 1.) THEN
@@ -6055,6 +6122,7 @@ C ----------------------------------------------------------------------
             ETT1 = ETT1*(1.-SNCOVR)
             ETNS1 = ETNS1*(1.-SNCOVR)
 C ----------------------------------------------------------------------
+cbl2014--is this commented block suspect?
 CBL Move this conversion from M/s to KG M-2 S-1 back to SFLX to avoid
 CBL confusion and mistakes, as these values were passed to SMFLX 
 CBL Therefore, had to supplement ETANRG calculation below with *1000's     
@@ -6067,10 +6135,13 @@ CBL            ETT = ETT1 * 1000.0
 CBL            ETNS = ETNS1 * 1000.0
 C ----------------------------------------------------------------------
           ENDIF
+cbl etp1=etp/1000 --> ESNOW2 = m/s here, but recalculated in SEB
           ESNOW = ETP*SNCOVR
           ESNOW1 = ESNOW*0.001
           ESNOW2 = ESNOW1*DT
+          if(prflag==1)write(*,*)'esnow2 etp sncovr',esnow1,etp,sncovr
 CBL          ETANRG = ESNOW*LSUBS + ETNS*LSUBC
+cbl2014 esnow2 is converted from mm/s to m
           ETANRG = ESNOW*LSUBS + ETNS*1000*LSUBC
         ENDIF
       ENDIF
@@ -6155,9 +6226,12 @@ CBL       PRCP = PRCP + DEW
          TOPSWE = ESD - PACH20
          if (prflag==1) write(*,*)'topswe esd pach20',topswe,esd,pach20
 C Remove newly added snow and redistribute it *correctly*
-         IF (SNOWNG.OR.FRZGRA) THEN
-C            SNOW = PRCP0
-            SNOW = PRCP0*sncovr
+cbl2014 there's another case here where SWE>0 but frzgra and snowng 
+cbl2014 false such that both prcp and prcp1 carry the same value
+cbl2014         IF (SNOWNG.OR.FRZGRA.) THEN
+         IF (SNOWNG.eq..true..OR.FRZGRA.eq..true..or.esd.gt.0.0) THEN
+            SNOW = PRCP0
+cbl2014            SNOW = PRCP0*sncovr
             TOPSWE = TOPSWE - SNOW
             SNOWCC = CHICE*SNOW*(MIN(SFCTMP,TFREEZ)-TFREEZ)
             if (prflag==1) write(*,*)'topswe-snow',topswe,snow
@@ -6173,8 +6247,8 @@ C Therefore, rain has not yet been added to the pack in SFLX
             SNOWCC = 0.0
             SNOW = 0.0
 c CHECK THIS -- DOUBLE ADDITION?
-C            RAIN = PRCP0
-            RAIN = PRCP0*SNCOVR
+            RAIN = PRCP0
+cbl2014            RAIN = PRCP0*SNCOVR
             swe1 = esd
             if (prflag==1) write(*,*)'swe1 = esd',swe1,esd,prcp0
             PACH20 = PACH20 + PRCP0
@@ -6213,7 +6287,8 @@ C     Now add snowfall and test if surface layer depth is exceeded by new snow
          ESD = TOPSWE + PACSWE
          swe2 = esd + pach20
          if (prflag==1) then
-         write(*,*)'added snowfall swe2',swe2,esd,topswe,pach20,snow      
+            write(*,*)'added snowfall swe2',swe2,esd,topswe,pach20,snow      
+            write(*,*)'post-prcp-add swe-mm',(esd*1000.0)     
          endif
 C     Compute initial layer temperatures, T1_0, based on cold contents
          IF (TOPSWE.GT.0.0) THEN
@@ -6599,10 +6674,12 @@ C     FRCH20 = 0.04
          endif
 CBL ESNOW will be the evap over the snow potion, which may have a
 CBL  different sign from ETP (rarely), but with MUST be updated in SFLX.
+cbl2014 esnow2 comes out of SEB in units of m
          DEWS = 0.0
 C     BL convert ESNOW2(VMF) from M to M/S (ESNOW) for transfer     
          if(prflag==1)write(*,*)'esnow2 m',esnow2,esd
-         ESNOW2 = (ESNOW2 * SNCOVR) 
+cbl         ESNOW2 = (ESNOW2 * SNCOVR) 
+         ESNOW2 = (ESNOW2) 
          if(prflag==1)write(*,*)'esnow2 sncovr esd',esnow2,sncovr,esd
          ESNOW = ESNOW2 / DT
          if(prflag==1)write(*,*)'esnow m/s',esnow,esd
@@ -6653,7 +6730,7 @@ C----------------------------------------------------------------------
 C     END OF 'ESD .LE. ETP2' IF-BLOCK
 C----------------------------------------------------------------------
       ENDIF
-      
+cbl EX is in units of m/s      
       EX = SNOMLT/DT
       if (prflag==1) write(*,*)'EX SNOMLT DT',EX,SNOMLT,DT
 CBL PRCP1 needs to be multiplied by snow-free area fraction
@@ -6661,7 +6738,10 @@ cbl need to upate this in case SNCOVR gets set to zero above
 cbl2014      PRCP1 = PRCP1 + (EX * SNCOVR)
       if (prflag==1) write(*,*)'PRCP1 = PRCP1 + (EX * SNCOVR)'
       if (prflag==1) write(*,*)'PRCP1 EX SNCOVR',PRCP1,EX,SNCOVR
-      PRCP1 = PRCP1 + (EX * SNCOVR0)
+cbl2014      PRCP1 = PRCP1 + (EX * SNCOVR0)
+cbl2014 Ensure PRCP1 = [m/s] for transfer
+      PRCP1 = PRCP1 + EX
+cbl2014      PRCP1 = PRCP1 + EX
       if (prflag==1) write(*,*)'PRCP1 = PRCP1 + (EX * SNCOVR0)'
       if (prflag==1) write(*,*)'PRCP1 EX SNCOVR0',PRCP1,EX,SNCOVR0
 cbl2014 in the case that ephemeral snow cover melts during the 
@@ -6690,22 +6770,31 @@ c     swedif = swe - swe
       endif
       if (prflag==1) write(*,*)'snwpac prcp1 snomlt',prcp1,ex
 
-C Add any dewfall (M/S) and melt (M/S) over non snow-covered area to PRCP1
+C Add any dewfall both in (M/S) and melt (M/S) over non snow-covered area to PRCP1 which is in m/s
       PRCP1 = PRCP1 + DEWNS 
-
-C DEW will is the combination of snowfree area (etp) and snow area (esnow)
-      DEW = DEWNS + DEWS
+      if(prflag==1)write(*,*)'PRCP1=PRCP1+DEWNS',prcp1,dewns
+C DEW is the combination of snowfree area (etp) and snow area (esnow)
+      DEW=0.0
+      IF (ETP .LT. 0.0) THEN
+         DEW = DEWNS
+      ENDIF
+      IF (ESNOW .LT. 0.0) THEN
+         DEW=DEW + DEWS
+      ENDIF
+      if(prflag==1)write(*,*)'DEW = DEWNS + DEWS'
+      if(prflag==1)write(*,*)'DEW DEWNS DEWS ETP SNCOVR'
+      if(prflag==1)write(*,*)DEW,DEWNS,DEWS,ETP,SNCOVR
 C ----------------------------------------------------------------------
 C FINAL BETA NOW IN HAND, SO COMPUTE EVAPORATION.  EVAP EQUALS ETP
 C UNLESS BETA<1.
 C ----------------------------------------------------------------------
 c      ETA = BETA*ETP
-      if (prflag==2) then
+      if (prflag==1) then
          totalmoist=esd+prcp1
          write(*,*)'2totalmoist',totalmoist,esd,prcp1
          write(*,*)'2prcp',prcp0,prcp1,prcp2
       endif
-      if (prflag==1)write(*,*)'snwpac prcp1 dewns snomlt',prcp1,dewns,ex
+      if (prflag==1)write(*,*)'snwpac prcp1 dewns ex',prcp1,dewns,ex
 cbl      write(*,*)'sp',prcp1,prcp0,ex,dewns
 cbl      write(*,*)'sp',prcp1,ex,dewns
 C ----------------------------------------------------------------------
@@ -6788,7 +6877,41 @@ C ----------------------------------------------------------------------
      &            TBOT,ZBOT,SMCWLT,PSISAT,SH2O,BEXP,F1,DF1,ICE,
      &            QUARTZ,CSOIL)
 
+cbl2014 Update snow fraction here, (?)
+
+cbl2014      CALL SNFRAC (ESD,SNUP,SALP,SNOWH,SNCOVR)
       
+      if (prflag==1) then
+         write(*,*)'-----------BOTTOM OF SNWPAC----------------'
+cbl2014 convert everything to mm, recall prcp1,etp1,esnow,dew=[m/s]
+         fswe=esd*1000.0
+         fprcp=prcp*DT
+         fprcp1=prcp1*1000.0*DT
+         fesnow2=esnow2*1000.0
+         write(*,*)'esnow',esnow
+         write(*,*)'iswe0',iswe0
+         write(*,*)'iswe,iprcp,iprcp1,iesnow2'
+         write(*,*)iswe,iprcp,iprcp1,iesnow2
+         write(*,*)'fswe,fprcp,fprcp1,fesnow2',fswe
+         write(*,*)fswe,fprcp,fprcp1,fesnow2
+cbl2014 compute differences
+c         dswe=fswe-iswe
+         dswe=fswe-iswe0
+         dprcp=iprcp-fprcp
+         dprcp1=iprcp1-fprcp1
+cbl         desnow2=fesnow2-iesnow2
+cbl convert m/s to mm
+         desnow2=dews*1000.0*DT
+cbl convert m/s to mm
+         dnsnow=dewns*1000.0*DT
+cbl Note: DEWNS gets added to PRCP1, so needs to be subrtracted
+cbl     mmbal=iprcp-dswe-fprcp1-desnow2
+         mmbal=iprcp-dswe-fprcp1+desnow2+dnsnow
+         write(*,*)'mmbal=iprcp-dswe-fprcp1+desnow2+dnsnow',mmbal
+         write(*,*)'iprcp dswe fprcp1 desnow2 dnsnow'
+         write(*,*)iprcp,dswe,fprcp1,desnow2,dnsnow
+         write(*,*)'----------------------------------------'         
+      endif
 C ----------------------------------------------------------------------
 C SNOW DEPTH AND DENSITY ADJUSTMENT BASED ON SNOW COMPACTION.  YY IS
 C ASSUMED TO BE THE SOIL TEMPERTURE AT THE TOP OF THE SOIL COLUMN.
@@ -8189,8 +8312,7 @@ C ----------------------------------------------------------------------
       END
 
       SUBROUTINE TRANSP (ET1,NSOIL,ETP1,SMC,STC,CMC,ZSOIL,SHDFAC,SMCWLT,
-     &                   CMCMAX,PC,CFACTR,SMCREF,SFCTMP,Q2,NROOT,RTDIS,
-     &                   prflag)
+     &     CMCMAX,PC,CFACTR,SMCREF,SFCTMP,Q2,NROOT,RTDIS,prflag)
 
       IMPLICIT NONE
 
@@ -8202,8 +8324,7 @@ C ----------------------------------------------------------------------
       INTEGER I
       INTEGER K
       INTEGER NSOIL
-      INTEGER NROOT
-      INTEGER PRFLAG
+      INTEGER NROOT,prflag
 
       REAL CFACTR
       REAL CMC
@@ -8229,8 +8350,6 @@ C.....REAL PART(NSOIL)
       REAL ZSOIL(NSOIL)
       REAL STCRT
       REAL DSTCRT
-
-      REAL JNK
 
 C ----------------------------------------------------------------------
 C INITIALIZE PLANT TRANSP TO ZERO FOR ALL SOIL LAYERS.
@@ -8275,42 +8394,14 @@ C seasonal factor for reduced root water uptake
 C calculate root zone soil temp
        STCRT=0
        DSTCRT=0
-         if(prflag==1)then
-           write(*,*)'root depths (1,nroot):1',NROOT
-         endif
-
       DO K=1,NROOT
-         if(prflag==1)then
-           write(*,*)'K:',K,'STC(K):',STC(K),'ZSOIL(K):',ZSOIL(K)
-         endif
-
        STCRT=STCRT+ZSOIL(K)*STC(K)
        DSTCRT=DSTCRT+ZSOIL(K)
-         if(prflag==1)then
-           write(*,*)'K:',K,'STCRT:',STCRT,'DSTCRT:',DSTCRT
-         endif
-
       ENDDO
        STCRT=STCRT/DSTCRT
-         if(prflag==1)then
-           write(*,*)'STCRT/DSTCRT FOR (k=1,nroot):',STCRT
-         endif
-
 
         DO K = 1,NROOT
          GTX(K)= MAX(0.0,1.-0.0016* MAX(298.- STCRT,0.0)**2)
-
-CMS   From log, GTX has to go from at most 0 to 1 so how is it so big?
-CMS   ET1(1) = RTDIS(1) * ETP1A * GTX(1)
-CMS   988939.4       1.000000      5.0015522E-19  1.9772650E+24
-
-
-         if(prflag==1)then
-           write(*,*)'K:',K,'GTX(K):',GTX(K)
-           JNK=MAX(298.- STCRT,0.0)**2
-           write(*,*)'MAX(298.- STCRT,0.0)',JNK
-         endif
-
         ENDDO
 
 C ----------------------------------------------------------------------
