@@ -80,9 +80,14 @@ FFLAGS = -c -g
 ## LIBS on tsunami
 #LIBS = -L$(LIB_NETCDF) -lnetcdf
 # LIBS on flood -- extra "f"
-LIBS = -L /usr/local/lib -lnetcdff
 
-HDRS = -I /usr/local/include
+#LIBS = -L /usr/local/lib -lnetcdff
+LIBS = -L /usr/lib64 -lnetcdff
+HDRS = -I /usr/include
+
+#LIBS = -L /usr/local/lib -lnetcdff
+#HDRS = -I /usr/local/include
+
 PROGRAM = ulm
 #PROGRAM = ulm.flood.full
 #PROGRAM = ulm.swm

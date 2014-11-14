@@ -163,6 +163,7 @@ PROGRAM noah
 
   ! OPEN RESTART FILE
   RESTFILE = TRIM(RESTART)//TRIM(SUFFIX)
+!  RESTFILE = TRIM(RESTART)//"/"//TRIM(SUFFIX)
   WRITE(*,*) 'Opening restart file ',TRIM(RESTFILE)
   CALL OPEN_RESTART
   ! Initialize time counters
@@ -1096,7 +1097,7 @@ PROGRAM noah
             step_bal = step_bal + partial_error
             if (prflag==1)write(*,*)'step_bal = step_bal + partial_error; band_area',step_bal,partial_error,band_area(I,J)
          END IF ! END HACK TO RUN ONLY ONE BAND CBL2014--> Leave this in place for if (band_area>0)
-         END DO
+         END DO ! End of bands loop
          
          ! Normalize variables that have NODATA over part of the grid cell
          ! (if appropriate)
@@ -1217,7 +1218,7 @@ PROGRAM noah
 
 !      end if ! SINGLECELL DEBUG HACK CBL2014
 
-      END DO
+      END DO ! End of land cells
       !$OMP END PARALLEL DO
       
       IF (MODEL_STEP_COUNT == OUTPUT_STEP_RATIO) THEN
@@ -1407,18 +1408,21 @@ PROGRAM noah
 
       END IF
 
-   END DO
+   END DO ! End of model timestep
 
     ! Write PotEvapPE to PE file
     CALL WRITE_PE(FORCING_STEP)
 
     ! Close output files if appropriate
     IF (FSTEP_COUNT == num_fsteps .OR. FORCING_STEP == tsteplen_save) THEN
-      ! Close the output file(s)
-      CALL CLOSE_OUTPUT
       ! Write restart file
+      WRITE(*,*) 'FSTEP_COUNT,num_fsteps,FORCING_STEP,tsteplen_save',FSTEP_COUNT,num_fsteps,FORCING_STEP,tsteplen_save
       WRITE(*,*) 'Writing restart file ',RESTFILE
       CALL WRITE_RESTART
+
+      ! Close the output file(s)
+      CALL CLOSE_OUTPUT
+
     ENDIF
 
     ! Check for end of simulation
@@ -1495,6 +1499,6 @@ PROGRAM noah
 
     ENDIF
 
-  END DO
+  END DO ! End of month/forcing file loop
 
 END PROGRAM noah
