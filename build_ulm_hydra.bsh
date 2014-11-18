@@ -28,7 +28,7 @@ fi
 
 source /usr/local/bin/client64-bash
 
-rm -rf obj
+#rm -rf obj
 mkdir obj
 
 date  > log_build-make.txt

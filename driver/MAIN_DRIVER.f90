@@ -72,6 +72,11 @@ PROGRAM noah
   real    temp10_sum,temp11_sum,temp12_sum,temp13_sum,temp14,temp14_sum,temp_bal,wb_add_out
   real    adimc_band,adimc_save_band,temp15,altwb_error
 
+  INTEGER :: ok,FID,icell2dump
+  CHARACTER*15 datetime
+
+  icell2dump = 12
+
   DATA MAXSMC/0.37308, 0.38568, 0.41592, 0.46758, 0.47766, 0.43482, 0.41592, 0.4764, 0.44868, 0.42348, 0.48144, 0.46128, 0.464, 0.000, 0.200, 0.421, 0.457, 0.200, 0.395, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000/
   DATA WLTSMC/0.03469064, 0.05199094, 0.08743051, 0.14637683, 0.10712489, 0.13941739, 0.15698002, 0.24386303, 0.21203782, 0.20755672, 0.28488226, 0.28290603, 0.069, 0.000, 0.012, 0.028, 0.135, 0.012, 0.023, 0.000/
   ! Initialize error status
@@ -271,6 +276,10 @@ PROGRAM noah
   temp13_sum=0.0
   temp14_sum=0.0
 
+  ! Log parameters.
+  OPEN(1,file="parms.txt",status="replace",iostat=ok)
+
+
   ! RUN TIME AND SPATIAL LOOP
   DO
 
@@ -368,6 +377,7 @@ PROGRAM noah
 !      write(*,*)'MODEL_STEP_COUNT ', MODEL_STEP_COUNT
 
       ! Reset timestep-specific grid-cell-total variables
+
       ETA = 0.0
       H = 0.0
       EVAP_total = 0.0
@@ -493,6 +503,35 @@ PROGRAM noah
          PSNOW1 = PSNOW1_2d(I)
          PSNOW2 = PSNOW2_2d(I)
          RICHARDS = RICHARDS_2d(I)
+
+
+        ! write out parameters at every time step for particular cell
+        ! make timestamp
+        WRITE(datetime,'("date-",i4.4,i2.2,i2.2,i2.2,i2.2)')year,month,day,hour
+        if (icell2dump.GE.1 .AND. I.EQ.icell2dump) THEN
+        ! write(1,*)'I,',I,', datetime,',year,month,day,hour
+        FID=1
+        write(FID,*),datetime,'UZTWM',UZTWM
+        write(FID,*),datetime,'UZFWM',UZFWM
+        write(FID,*),datetime,'UZK',UZK
+        write(FID,*),datetime,'PCTIM',PCTIM
+        write(FID,*),datetime,'ADIMP',ADIMP
+        write(FID,*),datetime,'RIVA',RIVA
+        write(FID,*),datetime,'ZPERC',ZPERC
+        write(FID,*),datetime,'REXP',REXP
+        write(FID,*),datetime,'LZTWM',LZTWM
+        write(FID,*),datetime,'LZFSM',LZFSM
+        write(FID,*),datetime,'LZFPM',LZFPM
+        write(FID,*),datetime,'LZSK',LZSK
+        write(FID,*),datetime,'LZPK',LZPK
+        write(FID,*),datetime,'PFREE',PFREE
+        write(FID,*),datetime,'SIDE',SIDE
+        write(FID,*),datetime,'RSERV',RSERV
+        write(FID,*),datetime,'WCRIT',WCRIT
+        write(FID,*),datetime,'PSNOW1',PSNOW1
+        write(FID,*),datetime,'PSNOW2',PSNOW2
+        write(FID,*),datetime,'RICHARDS',RICHARDS
+        ENDIF
 
          ! Loop over snow bands
          DO J = 1, nbands
@@ -1500,5 +1539,8 @@ PROGRAM noah
     ENDIF
 
   END DO ! End of month/forcing file loop
+
+CLOSE(1)
+! CONTAINS
 
 END PROGRAM noah
