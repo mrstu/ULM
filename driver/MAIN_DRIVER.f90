@@ -75,7 +75,7 @@ PROGRAM noah
   INTEGER :: ok,FID,icell2dump
   CHARACTER*15 datetime
 
-  icell2dump = 12
+  icell2dump = 1
 
   DATA MAXSMC/0.37308, 0.38568, 0.41592, 0.46758, 0.47766, 0.43482, 0.41592, 0.4764, 0.44868, 0.42348, 0.48144, 0.46128, 0.464, 0.000, 0.200, 0.421, 0.457, 0.200, 0.395, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000/
   DATA WLTSMC/0.03469064, 0.05199094, 0.08743051, 0.14637683, 0.10712489, 0.13941739, 0.15698002, 0.24386303, 0.21203782, 0.20755672, 0.28488226, 0.28290603, 0.069, 0.000, 0.012, 0.028, 0.135, 0.012, 0.023, 0.000/
@@ -277,7 +277,8 @@ PROGRAM noah
   temp14_sum=0.0
 
   ! Log parameters.
-  OPEN(1,file="parms.txt",status="replace",iostat=ok)
+  FID=1
+  OPEN(FID,file="parms.txt",status="replace",iostat=ok)
 
 
   ! RUN TIME AND SPATIAL LOOP
@@ -378,70 +379,10 @@ PROGRAM noah
 
       ! Reset timestep-specific grid-cell-total variables
 
-      ETA = 0.0
-      H = 0.0
-      EVAP_total = 0.0
-      EC1 = 0.0
-      EDIR1 = 0.0
-      ET = 0.0
-      ETT1 = 0.0
-      ESNOW = 0.0
-      DRIP = 0.0
-      DEW = 0.0
-      BETA = 0.0
-      ETP = 0.0
-      S = 0.0
-      FLX1 = 0.0
-      FLX2 = 0.0
-      FLX3 = 0.0
-      SNOMLT = 0.0
-      RUNOFF1 = 0.0
-      RUNOFF2 = 0.0
-      RUNOFF3 = 0.0
-      Albedo_ALMA = 0.0
-      ACond = 0.0
-      PC = 0.0
-      ACondMax = 0.0
-      RCS = 0.0
-      RCT = 0.0
-      RCQ = 0.0
-      RCSOIL = 0.0
-      SOILW = 0.0
-      SOILM = 0.0
-      SWE = 0.0
-      UZTWC = 0.0
-      UZFWC = 0.0
-      LZTWC = 0.0
-      LZFPC = 0.0
-      LZFSC = 0.0
-      PackWater = 0.0
-      CanopInt = 0.0
-      SWEVeg = 0.0
-      SoilMoist = 0.0
-      SoilMoistSac = 0.0
-      SoilTemp = 0.0
-      SMLiqFrac = 0.0
-      SMFrozFrac = 0.0
-      SoilWet = 0.0
-      SoilMoistTotal = 0.0
-      RootMoist = 0.0
-      Fdepth = 0.0
-      Tdepth = 0.0
-      SnowFrac = 0.0
-      SnowDepth = 0.0
-      VegT       = 0.0
-      BaresoilT  = 0.0
-      AvgSurfT   = 0.0
-      RadT       = 0.0
-      SAlbedo    = 0.0
-      band_area_with_snow    = 0.0
-      LWnet_model_step    = 0.0
-      Snowf_model_step    = 0.0
-      Rainf_model_step    = 0.0
-      SnowT = 0.0
- !Ben Livneh track effective snowpack temp TPACK = SnowTProf
-      SnowTProf = 0.0
-      wb_sum = 0.0
+      CALL RESET_CELL_TOTAL()
+
+      write(FID,*),'ETA',ETA
+
       prflag=0  ! DEBUGGING ONLY SET TO "1"-->THIS PRINTS LARGE AMOUNTS OF DATA TO SCREEN
 !      write(*,*)'day of year',day_of_year
       !$OMP PARALLEL DO
@@ -507,10 +448,12 @@ PROGRAM noah
 
         ! write out parameters at every time step for particular cell
         ! make timestamp
-        WRITE(datetime,'("date-",i4.4,i2.2,i2.2,i2.2,i2.2)')year,month,day,hour
+        ! WRITE(datetime,'("date-",i4.4,i2.2,i2.2,i2.2,i2.2)')year,month,day,hour
+        CALL DATEHOUR(year,month,day,hour,datetime)
+
         if (icell2dump.GE.1 .AND. I.EQ.icell2dump) THEN
         ! write(1,*)'I,',I,', datetime,',year,month,day,hour
-        FID=1
+        ! FID=1
         write(FID,*),datetime,'UZTWM',UZTWM
         write(FID,*),datetime,'UZFWM',UZFWM
         write(FID,*),datetime,'UZK',UZK
@@ -1544,3 +1487,92 @@ CLOSE(1)
 ! CONTAINS
 
 END PROGRAM noah
+
+
+SUBROUTINE DATEHOUR(year,month,day,hour,date_string)
+
+  ! Converts integer values of year, month, day, hour, minute, sec into a string
+  ! of the form YYYY-MM-DD HH:MM:SS
+
+  IMPLICIT NONE
+
+  ! Define local variables
+  INTEGER           :: year, month, day, hour
+  CHARACTER(len=15) :: date_string
+        ! WRITE(datetime,'("date-",i4.4,i2.2,i2.2,i2.2,i2.2)')year,month,day,hour
+  ! WRITE(date_string,FMT='(I4.4,"-",I2.2,"-",I2.2," ",I2.2,":",I2.2,":",I2.2)') year,month,day,hour,minute,sec
+  WRITE(date_string,FMT='("date-",I4.4,I2.2,I2.2,I2.2)') year,month,day,hour
+
+END
+
+SUBROUTINE RESET_CELL_TOTAL()
+
+!    IMPLICIT NONE
+
+      ! Reset timestep-specific grid-cell-total variables
+
+      ETA = 0.0
+      H = 0.0
+      EVAP_total = 0.0
+      EC1 = 0.0
+      EDIR1 = 0.0
+      ET = 0.0
+      ETT1 = 0.0
+      ESNOW = 0.0
+      DRIP = 0.0
+      DEW = 0.0
+      BETA = 0.0
+      ETP = 0.0
+      S = 0.0
+      FLX1 = 0.0
+      FLX2 = 0.0
+      FLX3 = 0.0
+      SNOMLT = 0.0
+      RUNOFF1 = 0.0
+      RUNOFF2 = 0.0
+      RUNOFF3 = 0.0
+      Albedo_ALMA = 0.0
+      ACond = 0.0
+      PC = 0.0
+      ACondMax = 0.0
+      RCS = 0.0
+      RCT = 0.0
+      RCQ = 0.0
+      RCSOIL = 0.0
+      SOILW = 0.0
+      SOILM = 0.0
+      SWE = 0.0
+      UZTWC = 0.0
+      UZFWC = 0.0
+      LZTWC = 0.0
+      LZFPC = 0.0
+      LZFSC = 0.0
+      PackWater = 0.0
+      CanopInt = 0.0
+      SWEVeg = 0.0
+      SoilMoist = 0.0
+      SoilMoistSac = 0.0
+      SoilTemp = 0.0
+      SMLiqFrac = 0.0
+      SMFrozFrac = 0.0
+      SoilWet = 0.0
+      SoilMoistTotal = 0.0
+      RootMoist = 0.0
+      Fdepth = 0.0
+      Tdepth = 0.0
+      SnowFrac = 0.0
+      SnowDepth = 0.0
+      VegT       = 0.0
+      BaresoilT  = 0.0
+      AvgSurfT   = 0.0
+      RadT       = 0.0
+      SAlbedo    = 0.0
+      band_area_with_snow    = 0.0
+      LWnet_model_step    = 0.0
+      Snowf_model_step    = 0.0
+      Rainf_model_step    = 0.0
+      SnowT = 0.0
+ !Ben Livneh track effective snowpack temp TPACK = SnowTProf
+      SnowTProf = 0.0
+      wb_sum = 0.0
+END
