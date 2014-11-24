@@ -9238,6 +9238,7 @@ C ----------------------------------------------------------------------
 C SET-UP VEGETATION PARAMETERS
 C ----------------------------------------------------------------------
       NROOT = NROOT_DATA(VEGTYP)
+      if(prflag==1)write(*,*)'NROOT',NROOT
 c      IF (MODEL_TYPE == 1.OR.MODEL_TYPE == 3) THEN
 c         NROOT = NROOT_DATA_SAC(VEGTYP)
 c      ELSE
@@ -9277,35 +9278,57 @@ c       RTDIS(I) = -SLDPTH(I)/ZSOIL(NROOT)
 c     END DO
         RTDIS1(1)  = 1.0 - 0.5*(EXP(-RTA*(0.5*SLDPTH(1)))
      &               +EXP(-RTB*(0.5*SLDPTH(1))))
+        if(prflag==1)write(*,*)'UNIFORM RTDIS1(1)',1,RTDIS1(1)
       DO I = 2,NROOT
         RTDIS1(I) = 1.0 - 0.5*(EXP(-RTA*(0.5*SLDPTH(I)-
      &              ZSOIL(NROOT-1)))
      &              +EXP(-RTB*(0.5*SLDPTH(I)-ZSOIL(NROOT-1))))
+        if(prflag==1)write(*,*)'RTDIS1(I)',I,RTDIS1(I)
       END DO
 
         RTDIS(1) = RTDIS1(1)
+        if(prflag==1)write(*,*)'RTDIS(1) = RTDIS1(1)',1,RTDIS(1)
 
       DO I = 2,NROOT-1
         RTDIS(I) = RTDIS1(I)-RTDIS1(I-1)
+        if(prflag==1)then
+           write(*,*)'RTDIS1(I)-RTDIS1(I-1)',I,RTDIS1(I),RTDIS1(I-1)
+        endif
       END DO
 
         RTACC = 0
       DO I = 1,NROOT-1
         RTACC = RTDIS(I)+RTACC
+        if(prflag==1)write(*,*)'RTACC=RTDIS(I)+RTACC',I,RTACC,RTDIS(I)
       ENDDO
 
         RTDIS(NROOT)=1-RTACC
+        if(prflag==1)write(*,*)'RTDIS(NROOT)=1-RTACC',RTDIS(NROOT)
 
       DO I = 1, NROOT
        RTDIS(I) = MIN (RTDIS(I), 1.)
        RTDIS(I) = MAX (RTDIS(I), 0.)
+       if(prflag==1)write(*,*)'RTDIS(I) = MAX (RTDIS(I), 0.)',RTDIS(I)
       ENDDO
 c no root distribution function used
+cbl2014 need to reset rtdis to zero for all root zones to prevent
+cbl2014 neighboring cells with 3 zones to have positive rtdis for
+cbl2014 the fourth zone
+      DO I = 1,NSOIL
+        RTDIS(I) = 0.0
+      ENDDO
+cbl2014 added the above
       DO I = 1,NROOT
         RTDIS(I) = -SLDPTH(I)/ZSOIL(NROOT)
+        if(prflag==1)then
+           write(*,*)'RTDIS(I)=-SLDPTH(I)/ZSOIL(NROOT)'
+           write(*,*),RTDIS(I),SLDPTH(I),ZSOIL(NROOT)
+        endif
 cbl        write(*,*)'rtdis',i,rtdis(i)
       END DO
 
+cbl2014 The below does not get used, since it only modifies 
+cbl2014 RTDIS1, whereas RTDIS is the returned quantity
       if (model_type==1) then
          RMAX = RMAX_DATA(VEGTYP)
          CROOT = CROOT_DATA(VEGTYP)
@@ -9313,9 +9336,10 @@ cbl        write(*,*)'rtdis',i,rtdis(i)
          NROOT = 0
          do i =1,nsoil
             rtdis1(i) = RMAX/(1+(-ZSOIL(I)/D50)**CROOT)
-cbl         write(*,*)'ZSOIL',I,-ZSOIL(I)
-cbl         write(*,*)rmax,croot,d50
-cbl         write(*,*)'rtdis1',i,rtdis1(i)
+            if(prflag==1)then
+               write(*,*)'rtdis1(i) = RMAX/(1+(-ZSOIL(I)/D50)**CROOT)'
+               write(*,*)i,rtdis1(i),RMAX,ZSOIL(I),D50,CROOT
+            endif
             if (I.NE.1.AND.RMAX.GT.-zsoil(i-1)) then
                NROOT = I
                if(prflag==1)write(*,*)'nroot in loop',i,nroot

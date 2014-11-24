@@ -75,8 +75,6 @@ PROGRAM noah
   INTEGER :: ok,FID,icell2dump
   CHARACTER*15 datetime
 
-  icell2dump = 1
-
   DATA MAXSMC/0.37308, 0.38568, 0.41592, 0.46758, 0.47766, 0.43482, 0.41592, 0.4764, 0.44868, 0.42348, 0.48144, 0.46128, 0.464, 0.000, 0.200, 0.421, 0.457, 0.200, 0.395, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000, 0.000/
   DATA WLTSMC/0.03469064, 0.05199094, 0.08743051, 0.14637683, 0.10712489, 0.13941739, 0.15698002, 0.24386303, 0.21203782, 0.20755672, 0.28488226, 0.28290603, 0.069, 0.000, 0.012, 0.028, 0.135, 0.012, 0.023, 0.000/
   ! Initialize error status
@@ -168,7 +166,6 @@ PROGRAM noah
 
   ! OPEN RESTART FILE
   RESTFILE = TRIM(RESTART)//TRIM(SUFFIX)
-!  RESTFILE = TRIM(RESTART)//"/"//TRIM(SUFFIX)
   WRITE(*,*) 'Opening restart file ',TRIM(RESTFILE)
   CALL OPEN_RESTART
   ! Initialize time counters
@@ -276,11 +273,6 @@ PROGRAM noah
   temp13_sum=0.0
   temp14_sum=0.0
 
-  ! Log parameters.
-  FID=1
-  OPEN(FID,file="parms.txt",status="replace",iostat=ok)
-
-
   ! RUN TIME AND SPATIAL LOOP
   DO
 
@@ -378,15 +370,82 @@ PROGRAM noah
 !      write(*,*)'MODEL_STEP_COUNT ', MODEL_STEP_COUNT
 
       ! Reset timestep-specific grid-cell-total variables
-
-      CALL RESET_CELL_TOTAL()
-
-      write(FID,*),'ETA',ETA
-
+      ETA = 0.0
+      H = 0.0
+      EVAP_total = 0.0
+      EC1 = 0.0
+      EDIR1 = 0.0
+      ET = 0.0
+      ETT1 = 0.0
+      ESNOW = 0.0
+      DRIP = 0.0
+      DEW = 0.0
+      BETA = 0.0
+      ETP = 0.0
+      S = 0.0
+      FLX1 = 0.0
+      FLX2 = 0.0
+      FLX3 = 0.0
+      SNOMLT = 0.0
+      RUNOFF1 = 0.0
+      RUNOFF2 = 0.0
+      RUNOFF3 = 0.0
+      Albedo_ALMA = 0.0
+      ACond = 0.0
+      PC = 0.0
+      ACondMax = 0.0
+      RCS = 0.0
+      RCT = 0.0
+      RCQ = 0.0
+      RCSOIL = 0.0
+      SOILW = 0.0
+      SOILM = 0.0
+      SWE = 0.0
+      UZTWC = 0.0
+      UZFWC = 0.0
+      LZTWC = 0.0
+      LZFPC = 0.0
+      LZFSC = 0.0
+      PackWater = 0.0
+      CanopInt = 0.0
+      SWEVeg = 0.0
+      SoilMoist = 0.0
+      SoilMoistSac = 0.0
+      SoilTemp = 0.0
+      SMLiqFrac = 0.0
+      SMFrozFrac = 0.0
+      SoilWet = 0.0
+      SoilMoistTotal = 0.0
+      RootMoist = 0.0
+      Fdepth = 0.0
+      Tdepth = 0.0
+      SnowFrac = 0.0
+      SnowDepth = 0.0
+      VegT       = 0.0
+      BaresoilT  = 0.0
+      AvgSurfT   = 0.0
+      RadT       = 0.0
+      SAlbedo    = 0.0
+      band_area_with_snow    = 0.0
+      LWnet_model_step    = 0.0
+      Snowf_model_step    = 0.0
+      Rainf_model_step    = 0.0
+      SnowT = 0.0
+ !Ben Livneh track effective snowpack temp TPACK = SnowTProf
+      SnowTProf = 0.0
+      wb_sum = 0.0
       prflag=0  ! DEBUGGING ONLY SET TO "1"-->THIS PRINTS LARGE AMOUNTS OF DATA TO SCREEN
 !      write(*,*)'day of year',day_of_year
       !$OMP PARALLEL DO
       DO I = 1,landlen
+         if (landlen>1 .and. i==241) then
+            prflag=1
+         else
+            prflag=0
+         endif
+         if (landlen == 1) then
+            prflag=1
+         endif
          !         write(*,*)'ilatlon',I,LAT(X(I),Y(I)),LON(X(I),Y(I))
          !  Start debugging conditional
          !IF (I==100) THEN ! BL2014 Hack to run only one cell
@@ -445,37 +504,34 @@ PROGRAM noah
          PSNOW2 = PSNOW2_2d(I)
          RICHARDS = RICHARDS_2d(I)
 
-
         ! write out parameters at every time step for particular cell
         ! make timestamp
-        ! WRITE(datetime,'("date-",i4.4,i2.2,i2.2,i2.2,i2.2)')year,month,day,hour
-        CALL DATEHOUR(year,month,day,hour,datetime)
-
-        if (icell2dump.GE.1 .AND. I.EQ.icell2dump) THEN
+        WRITE(datetime,'("date-",i4.4,i2.2,i2.2,i2.2,i2.2)')year,month,day,hour
+!        if (icell2dump.GE.1 .AND. I.EQ.icell2dump) THEN
+        if (prflag==1) THEN
         ! write(1,*)'I,',I,', datetime,',year,month,day,hour
-        ! FID=1
-        write(FID,*),datetime,'UZTWM',UZTWM
-        write(FID,*),datetime,'UZFWM',UZFWM
-        write(FID,*),datetime,'UZK',UZK
-        write(FID,*),datetime,'PCTIM',PCTIM
-        write(FID,*),datetime,'ADIMP',ADIMP
-        write(FID,*),datetime,'RIVA',RIVA
-        write(FID,*),datetime,'ZPERC',ZPERC
-        write(FID,*),datetime,'REXP',REXP
-        write(FID,*),datetime,'LZTWM',LZTWM
-        write(FID,*),datetime,'LZFSM',LZFSM
-        write(FID,*),datetime,'LZFPM',LZFPM
-        write(FID,*),datetime,'LZSK',LZSK
-        write(FID,*),datetime,'LZPK',LZPK
-        write(FID,*),datetime,'PFREE',PFREE
-        write(FID,*),datetime,'SIDE',SIDE
-        write(FID,*),datetime,'RSERV',RSERV
-        write(FID,*),datetime,'WCRIT',WCRIT
-        write(FID,*),datetime,'PSNOW1',PSNOW1
-        write(FID,*),datetime,'PSNOW2',PSNOW2
-        write(FID,*),datetime,'RICHARDS',RICHARDS
+        FID=1
+        write(*,*),'M.UZTWM',UZTWM
+        write(*,*),'UZFWM',UZFWM
+        write(*,*),'UZK',UZK
+        write(*,*),'PCTIM',PCTIM
+        write(*,*),'ADIMP',ADIMP
+        write(*,*),'RIVA',RIVA
+        write(*,*),'ZPERC',ZPERC
+        write(*,*),'REXP',REXP
+        write(*,*),'LZTWM',LZTWM
+        write(*,*),'LZFSM',LZFSM
+        write(*,*),'LZFPM',LZFPM
+        write(*,*),'LZSK',LZSK
+        write(*,*),'LZPK',LZPK
+        write(*,*),'PFREE',PFREE
+        write(*,*),'SIDE',SIDE
+        write(*,*),'RSERV',RSERV
+        write(*,*),'WCRIT',WCRIT
+        write(*,*),'PSNOW1',PSNOW1
+        write(*,*),'PSNOW2',PSNOW2
+        write(*,*),'RICHARDS',RICHARDS
         ENDIF
-
          ! Loop over snow bands
          DO J = 1, nbands
 
@@ -576,7 +632,7 @@ PROGRAM noah
                   if(prflag==1)write(*,*)'XXcmc_value0',cmc_value0,band_area(I,J)
                endif
                if (prflag == 1) then
-                  write(*,*)'above sflx'
+                  write(*,*)'above sflx elev',band_elev(i,j)
                   write(*,*)'cell',I,'band',J,'DT_PRCP_band',DT_PRCP_band,'DT_TAIR_band',DT_TAIR_band,'SNEQV',SNEQV(I,J)
                   write(*,*)'RAIN_band',RAIN_band,'SNOW_band',SNOW_band
                   write(*,*)'DT_SOLNET',DT_SOLNET_band,'DT_SPFH',DT_SPFH_band,'TH2',TH2_band,'DT_SPFH_SAT',DT_SPFH_SAT_band,'DQSDT2',DQSDT2_band
@@ -746,7 +802,10 @@ PROGRAM noah
                   write(*,*)'DT_SOLNET',DT_SOLNET_band,'DT_SPFH',DT_SPFH_band,'TH2',TH2_band,'DT_SPFH_SAT',DT_SPFH_SAT_band,'DQSDT2',DQSDT2_band
                   write(*,*)'State vars'
                   write(*,*)CMC(I,J),T1(I,J),STC(I,J,:),SMC(I,J,:),SH2O(I,J,:),SNOWH(I,J),SNEQV(I,J),ALB_TOT_band,CH(I,J),CM(I,J)
-                  write(*,*)'STC',STC(I,J,:),'SMC',SMC(I,J,:),'SH20',SH2O(I,J,:)
+                  write(*,*) '1.SMC:',(SMC(I,J,K),K=1,4)
+                  write(*,*) '1.SH2O:',(SH2O(I,J,K),K=1,4)
+                  write(*,*) '1.SACST:',(SACST(I,J,K),K=1,5)
+                  write(*,*) '1.FRZST:',(FRZST(I,J,K+5),K=1,5)
                   write(*,*)
                   write(*,*)'MODEL TYPE',MODEL_TYPE
                   write(*,*)'SOILDEPTH',SOILDEPTH(I,:)
@@ -1026,12 +1085,12 @@ PROGRAM noah
                   SoilMoistSac(I,K) = SoilMoistSac(I,K) + SACST(I,J,K)*band_area(I,J)
                ENDDO
                if (prflag==1) then
-                  write(*,*) '0.SMC:',(SMC(I,J,K),K=1,4)
-                  write(*,*) '0.SH2O:',(SH2O(I,J,K),K=1,4)
-                  write(*,*) '0.SoilMoist:',(SoilMoist(I,K),K=1,4)
-                  write(*,*) '0.SACST:',(SACST(I,J,K),K=1,5)
-                  write(*,*) '0.SoilMoistSac:',(SoilMoistSac(I,K),K=1,5)
-                  write(*,*) '0.FRZST:',(FRZST(I,J,K+5),K=1,5)
+                  write(*,*) '2.SMC:',(SMC(I,J,K),K=1,4)
+                  write(*,*) '2.SH2O:',(SH2O(I,J,K),K=1,4)
+                  write(*,*) '2.SoilMoist:',(SoilMoist(I,K),K=1,4)
+                  write(*,*) '2.SACST:',(SACST(I,J,K),K=1,5)
+                  write(*,*) '2.SoilMoistSac:',(SoilMoistSac(I,K),K=1,5)
+                  write(*,*) '2.FRZST:',(FRZST(I,J,K+5),K=1,5)
                endif
                SoilMoistTotal(I)=SoilMoistTotal(I)+SOILMOIST_total_band*band_area(I,J)
                if (prflag==1)write(*,*)'XXSoilMoistTotal(I)',SoilMoistTotal(I)
@@ -1079,7 +1138,7 @@ PROGRAM noah
             step_bal = step_bal + partial_error
             if (prflag==1)write(*,*)'step_bal = step_bal + partial_error; band_area',step_bal,partial_error,band_area(I,J)
          END IF ! END HACK TO RUN ONLY ONE BAND CBL2014--> Leave this in place for if (band_area>0)
-         END DO ! End of bands loop
+         END DO
          
          ! Normalize variables that have NODATA over part of the grid cell
          ! (if appropriate)
@@ -1200,7 +1259,7 @@ PROGRAM noah
 
 !      end if ! SINGLECELL DEBUG HACK CBL2014
 
-      END DO ! End of land cells
+      END DO
       !$OMP END PARALLEL DO
       
       IF (MODEL_STEP_COUNT == OUTPUT_STEP_RATIO) THEN
@@ -1390,21 +1449,18 @@ PROGRAM noah
 
       END IF
 
-   END DO ! End of model timestep
+   END DO
 
     ! Write PotEvapPE to PE file
     CALL WRITE_PE(FORCING_STEP)
 
     ! Close output files if appropriate
     IF (FSTEP_COUNT == num_fsteps .OR. FORCING_STEP == tsteplen_save) THEN
-      ! Write restart file
-      WRITE(*,*) 'FSTEP_COUNT,num_fsteps,FORCING_STEP,tsteplen_save',FSTEP_COUNT,num_fsteps,FORCING_STEP,tsteplen_save
-      WRITE(*,*) 'Writing restart file ',RESTFILE
-      CALL WRITE_RESTART
-
       ! Close the output file(s)
       CALL CLOSE_OUTPUT
-
+      ! Write restart file
+      WRITE(*,*) 'Writing restart file ',RESTFILE
+      CALL WRITE_RESTART
     ENDIF
 
     ! Check for end of simulation
@@ -1481,98 +1537,6 @@ PROGRAM noah
 
     ENDIF
 
-  END DO ! End of month/forcing file loop
-
-CLOSE(1)
-! CONTAINS
+  END DO
 
 END PROGRAM noah
-
-
-SUBROUTINE DATEHOUR(year,month,day,hour,date_string)
-
-  ! Converts integer values of year, month, day, hour, minute, sec into a string
-  ! of the form YYYY-MM-DD HH:MM:SS
-
-  IMPLICIT NONE
-
-  ! Define local variables
-  INTEGER           :: year, month, day, hour
-  CHARACTER(len=15) :: date_string
-        ! WRITE(datetime,'("date-",i4.4,i2.2,i2.2,i2.2,i2.2)')year,month,day,hour
-  ! WRITE(date_string,FMT='(I4.4,"-",I2.2,"-",I2.2," ",I2.2,":",I2.2,":",I2.2)') year,month,day,hour,minute,sec
-  WRITE(date_string,FMT='("date-",I4.4,I2.2,I2.2,I2.2)') year,month,day,hour
-
-END
-
-SUBROUTINE RESET_CELL_TOTAL()
-
-!    IMPLICIT NONE
-
-      ! Reset timestep-specific grid-cell-total variables
-
-      ETA = 0.0
-      H = 0.0
-      EVAP_total = 0.0
-      EC1 = 0.0
-      EDIR1 = 0.0
-      ET = 0.0
-      ETT1 = 0.0
-      ESNOW = 0.0
-      DRIP = 0.0
-      DEW = 0.0
-      BETA = 0.0
-      ETP = 0.0
-      S = 0.0
-      FLX1 = 0.0
-      FLX2 = 0.0
-      FLX3 = 0.0
-      SNOMLT = 0.0
-      RUNOFF1 = 0.0
-      RUNOFF2 = 0.0
-      RUNOFF3 = 0.0
-      Albedo_ALMA = 0.0
-      ACond = 0.0
-      PC = 0.0
-      ACondMax = 0.0
-      RCS = 0.0
-      RCT = 0.0
-      RCQ = 0.0
-      RCSOIL = 0.0
-      SOILW = 0.0
-      SOILM = 0.0
-      SWE = 0.0
-      UZTWC = 0.0
-      UZFWC = 0.0
-      LZTWC = 0.0
-      LZFPC = 0.0
-      LZFSC = 0.0
-      PackWater = 0.0
-      CanopInt = 0.0
-      SWEVeg = 0.0
-      SoilMoist = 0.0
-      SoilMoistSac = 0.0
-      SoilTemp = 0.0
-      SMLiqFrac = 0.0
-      SMFrozFrac = 0.0
-      SoilWet = 0.0
-      SoilMoistTotal = 0.0
-      RootMoist = 0.0
-      Fdepth = 0.0
-      Tdepth = 0.0
-      SnowFrac = 0.0
-      SnowDepth = 0.0
-      VegT       = 0.0
-      BaresoilT  = 0.0
-      AvgSurfT   = 0.0
-      RadT       = 0.0
-      SAlbedo    = 0.0
-      band_area_with_snow    = 0.0
-      LWnet_model_step    = 0.0
-      Snowf_model_step    = 0.0
-      Rainf_model_step    = 0.0
-      SnowT = 0.0
- !Ben Livneh track effective snowpack temp TPACK = SnowTProf
-      SnowTProf = 0.0
-      wb_sum = 0.0
-END
