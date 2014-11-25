@@ -627,6 +627,7 @@ C DETERMINE SNOWCOVER AND ALBEDO OVER LAND.
 C ----------------------------------------------------------------------
 CHELIN    diurnal variation of albedo
       ALB1=ALB
+      if(prflag==1)write(*,*)'ALB1=ALB',ALB1
 c     IF(ALB.LE.0.5)THEN
 c        PI= 3.141592
 c        ALBEDO0=-18.0*(0.5-ACOS(CZMODEL)/PI)
@@ -637,9 +638,17 @@ c        ALBEDO2=ALBEDO1+(1-ALBEDO1)*ALBEDO0
 c        ALBEDO2=MIN(ALBEDO2,3*ALB)
          ALBEDO2=ALB1*(2.287-3.374*CZMODEL+3.619*CZMODEL*CZMODEL
      1           -1.603**CZMODEL*CZMODEL*CZMODEL)
+         if(prflag==1)then
+            write(*,*)'ALBEDO2=ALB1*(2.287-3.374*CZMODEL+3.619*'
+            write(*,*)'*CZMODEL*CZMODEL'
+            write(*,*)ALBEDO,ALB1,CZMODEL
+         endif
 c weighting so diurnal adjustment only applied for direct beam
          ALB1=0.45*ALB+0.55*ALBEDO2
+         if(prflag==1)write(*,*)'ALB1=0.45*ALB+0.55*ALBEDO2'
+         if(prflag==1)write(*,*)ALB1,ALB,ALBEDO2
          IF(ALB1.LT.0)ALB1=0
+         if(prflag==1)write(*,*)'IF(ALB1.LT.0)ALB1=0',ALB1
 c     ENDIF
  
       IF (ICE .EQ. 0) THEN
@@ -665,7 +674,7 @@ C Ben Livneh 2007; Alternate albedo scheme, considering a higher initial
 C albedo, with an exponential decay function
 
        CALL ALBCPU (ALB1,SNOALB,SHDFAC,SHDMIN,SNCOVR,TSNOW,ALBEDO,
-     &           SNOWNG,TFREEZ,DT,SNEQV,T1,LSTSNW1,VEGTYP,psnow1)
+     &           SNOWNG,TFREEZ,DT,SNEQV,T1,LSTSNW1,VEGTYP,psnow1,prflag)
 
 C ----------------------------------------------------------------------
          ENDIF
@@ -725,8 +734,10 @@ C ----------------------------------------------------------------------
 
       IF (SNEQV .EQ. 0.) THEN
          SSOIL = DF1 * (T1 - STC(1) ) / DSOIL
-c         write(*,*)'sflx swe  ssoil df1 t1 stc1 dsoil'
-c         write(*,*)ssoil,df1,t1,stc(1),dsoil
+         if(prflag==1) then
+            write(*,*)'ssoil df1 t1 stc1 dsoil'
+            write(*,*)ssoil,df1,t1,stc(1),dsoil
+         endif
       ELSE
         DTOT = SNOWH + DSOIL
         FRCSNO = SNOWH/DTOT
@@ -1258,7 +1269,7 @@ C 2008-Sep-20 Changed COEF to 1.0 so that initial snow albedo is 0.85.	TJB
 C ---------------------------------------------------------------------
 
       SUBROUTINE ALBCPU (ALB,SNOALB,SHDFAC,SHDMIN,SNCOVR,TSNOW,ALBEDO,
-     &     SNOWNG,TFREEZ,DT,SNEQV,T12,LSTSNW1,VEGTYP,psnow1)
+     &     SNOWNG,TFREEZ,DT,SNEQV,T12,LSTSNW1,VEGTYP,psnow1,prflag)
 
       IMPLICIT NONE
       
@@ -1295,6 +1306,7 @@ C      PARAMETER (COEF=0.5)
       PARAMETER
      &     (SNACCA=0.94,SNACCB=0.58,SNTHWA=0.82,SNTHWB=0.46)
       PARAMETER (MINALB=0.4)
+      integer prflag
 
 C ----------------------------------------------------------------------
 C SNOALB IS CONSIDERED AS THE MAXIMUM SNOW ALBEDO FOR NEW SNOW, AT 
@@ -1306,34 +1318,57 @@ C ZERO AND THE DATE FALLS BETWEEN OCTOBER AND FEBRUARY
 C ----------------------------------------------------------------------
 CBL Sensitivity test psnow1 as maximum snow albedo, replaces 0.85
 CBL	   SNOALB1 = SNOALB+COEF*(0.85-SNOALB)
-	   SNOALB1 = SNOALB+COEF*(psnow1-SNOALB)
+      SNOALB1 = SNOALB+COEF*(psnow1-SNOALB)
+      if(prflag==1)write(*,*)'SNOALB1 = SNOALB+COEF*(psnow1-SNOALB)'
+      if(prflag==1)write(*,*)SNOALB1,SNOALB,COEF,psnow1,SNOALB
 c           write(*,*)'psnow1',psnow1
 C           IF(VEGTYP.EQ.1.OR.VEGTYP.EQ.5) SNOALB1=0.85 
-	   SNOALB2=SNOALB1	   
+      SNOALB2=SNOALB1	   
+      if(prflag==1)write(*,*)'SNOALB2=SNOALB1',SNOALB2,SNOALB1
 C ---------------- Initial LSTSNW --------------------------------------
-		LSTSNW=LSTSNW1
-          IF (SNOWNG) THEN
-             SNOALB2=SNOALB1
-             LSTSNW=0
-          ELSE
-            LSTSNW=LSTSNW+1
-            IF (SNEQV.GT.0.0) THEN
-              IF (T12.LT.TFREEZ) THEN
+      LSTSNW=LSTSNW1
+      if(prflag==1)write(*,*)' LSTSNW=LSTSNW1',LSTSNW,LSTSNW1
+      IF (SNOWNG) THEN
+         SNOALB2=SNOALB1
+         LSTSNW=0
+         if(prflag==1)write(*,*)'SNOWNG'
+         if(prflag==1)write(*,*)'SNOALB2=SNOALB1',SNOALB2
+         if(prflag==1)write(*,*)'LSTSNW=0',LSTSNW
+      ELSE
+         LSTSNW=LSTSNW+1
+         if(prflag==1)write(*,*)'LSTSNW=LSTSNW+1',LSTSNW
+         IF (SNEQV.GT.0.0) THEN
+            IF (T12.LT.TFREEZ) THEN
                SNOALB2=SNOALB1*(SNACCA**((LSTSNW*DT/86400.0)**SNACCB))
-              ELSE
-              SNOALB2 =SNOALB1*(SNTHWA**((LSTSNW*DT/86400.0)**SNTHWB))
-              ENDIF
+               if(prflag==1) then
+                  write(*,*)'SNOALB2=SNOALB1*(SNACCA**((LSTSNW*DT/'
+                  write(*,*)'/86400.0)**SNACCB))'
+                  write(*,*)'SNOALB2',SNOALB2
+               endif
+            ELSE
+               SNOALB2 =SNOALB1*(SNTHWA**((LSTSNW*DT/86400.0)**SNTHWB))
+               if(prflag==1) then
+                  write(*,*)'SNOALB2 =SNOALB1*(SNTHWA**((LSTSNW*DT/'
+                  write(*,*)'/86400.0)**SNTHWB))'
+                  write(*,*)'SNOALB2',SNOALB2
+               endif
             ENDIF
-          ENDIF
+         ENDIF
+      ENDIF
 
-	  IF (SNOALB2 .LT. MINALB) THEN
-	    SNOALB2 = MINALB
-	  ENDIF
-  
-	   ALBEDO = ALB + SNCOVR*(SNOALB2-ALB)
-           IF (ALBEDO .GT. SNOALB2) ALBEDO=SNOALB2
-
-	  LSTSNW1=LSTSNW
+      IF (SNOALB2 .LT. MINALB) THEN
+         SNOALB2 = MINALB
+         if(prflag==1)write(*,*)'SNOALB2 = MINALB',SNOALB2
+      ENDIF
+      
+      ALBEDO = ALB + SNCOVR*(SNOALB2-ALB)
+      if(prflag==1)write(*,*)'ALBEDO = ALB + SNCOVR*(SNOALB2-ALB)'
+      if(prflag==1)write(*,*)ALBEDO,ALB,SNCOVR,SNOALB2
+      IF (ALBEDO .GT. SNOALB2) ALBEDO=SNOALB2
+      if(prflag==1)write(*,*)'IF (ALBEDO .GT. SNOALB2) ALBEDO=SNOALB2'
+      if(prflag==1)write(*,*)'ALBEDO',ALBEDO
+      LSTSNW1=LSTSNW
+      if(prflag==1)write(*,*)'LSTSNW1=LSTSNW',LSTSNW1
 C ----------------------------------------------------------------------
 C END SUBROUTINE ALBCPU
 C ----------------------------------------------------------------------

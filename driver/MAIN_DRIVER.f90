@@ -20,6 +20,9 @@ PROGRAM noah
   !             SNWPAC iterative temperature solver         Ben Livneh
   ! 2008-Oct-07 Included SAC parameters for use as unified model         Ben Livneh
   ! 2010-Jan-06 Did a bunch of consistency checks between driver and sflx, units, wb components
+  ! 2014-Nov-25 Changed CZMODEL to CZMODEL(I) passing to SFLX as
+  ! it was previously passing the entire array, where first index
+  ! got uzed rather than the correct index --Ben Livneh
 
   ! driverMod contains definitions of all global driver variables
   USE driverMod
@@ -438,13 +441,15 @@ PROGRAM noah
 !      write(*,*)'day of year',day_of_year
       !$OMP PARALLEL DO
       DO I = 1,landlen
-         if (landlen>1 .and. i==241) then
-            prflag=1
+!         if (landlen>1 .and. i==241) then
+!         if (landlen>1 .and. i==232) then ! cell 7_14
+         if (landlen>1 .and. i==203) then ! cell 10_12
+!            prflag=1
          else
-            prflag=0
+!            prflag=0
          endif
          if (landlen == 1) then
-            prflag=1
+!            prflag=1
          endif
          !         write(*,*)'ilatlon',I,LAT(X(I),Y(I)),LON(X(I),Y(I))
          !  Start debugging conditional
@@ -478,6 +483,7 @@ PROGRAM noah
             write(*,*)
             write(*,*)'soldn',DT_SOLDN(I),DT_LWDN(I),DT_TAIR(I),DT_PRCP(I),DT_PSFC(I),DT_WIND(I)
             write(*,*)
+            write(*,*)'CZMODEL(I)',CZMODEL(I)
 
          endif
 
@@ -789,7 +795,7 @@ PROGRAM noah
                     RUNOFF1_band,RUNOFF2_band,RUNOFF3_band, &
                     RC_band,PC_band,RSMIN_band,LAI_tmp,RCS_band,RCT_band,RCQ_band,RCSOIL_band, &
                     FX,SOILW_band,SOILM_band,RGL,HS,error_flag,prflag,I,MODEL_STEP_COUNT, &
-                    W_WILT(I),SMCDRY(I),SMCREF(I),W_SAT(I),NROOT(I),CZMODEL,LSTSNW(I,J),MODEL_TYPE,lvrain,WCRIT,PSNOW1,PSNOW2,RICHARDS)
+                    W_WILT(I),SMCDRY(I),SMCREF(I),W_SAT(I),NROOT(I),CZMODEL(I),LSTSNW(I,J),MODEL_TYPE,lvrain,WCRIT,PSNOW1,PSNOW2,RICHARDS)
 
                ! write(*,*)'after ',I,J,SMC(I,J,:),STC(I,J,:)
                ! CBL2014 Convert units and add DEW to actual W/m**2 and add to ETA_band
