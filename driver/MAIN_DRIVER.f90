@@ -438,6 +438,14 @@ PROGRAM noah
       SnowTProf = 0.0
       wb_sum = 0.0
       prflag=0  ! DEBUGGING ONLY SET TO "1"-->THIS PRINTS LARGE AMOUNTS OF DATA TO SCREEN
+!      if (year.eq.1953 .and. month.eq.3) then
+!      if (year.eq.1953 .and. month.eq.10) then
+!      if (year.eq.1952 .and. month.eq.4 .and. day.eq.30) then
+!          prflag=1
+!      else
+!          prflag=0
+!      endif
+
 !      write(*,*)'day of year',day_of_year
       !$OMP PARALLEL DO
       DO I = 1,landlen

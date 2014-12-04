@@ -46,7 +46,7 @@ SUBROUTINE OPEN_RESTART()
   status = NF_DEF_DIM(RESTART_NCID,'z',MAXNSOIL,leveldimid)
   status = NF_DEF_DIM(RESTART_NCID,'band',NBANDS,banddimid)
   status = NF_DEF_DIM(RESTART_NCID,'zone',6,sacdimid)
-  status = NF_DEF_DIM(RESTART_NCID,'--',10,frzdimid)
+  status = NF_DEF_DIM(RESTART_NCID,'frzparm',10,frzdimid)
   dims2d(1) = xdimid
   dims2d(2) = ydimid
   dims3d(1) = xdimid

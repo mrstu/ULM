@@ -2722,6 +2722,11 @@ C ----------------------------------------------------------------------
       END DO
       ETT = 0.
       ETT1 = 0.
+
+      if (prflag==1) then
+      write(*,*)'before evapo: eta1',eta1
+      endif
+
       IF (ETP .GT. 0.0) THEN
 
 C ----------------------------------------------------------------------
@@ -2733,6 +2738,12 @@ C ----------------------------------------------------------------------
      &                 SMCDRY,CFACTR, 
      &                 EDIR1,EC1,ET1,ETT1,SFCTMP,Q2,NROOT,RTDIS,
      &                 FXEXP,FX,MODEL_TYPE,SMCFLAG,prflag)
+
+      if (prflag==1) then
+      write(*,*)'before smflx_sac: eta1',eta1
+      endif
+
+
            IF (MODEL_TYPE.EQ.0) THEN
            CALL SMFLX (SMC,NSOIL,CMC,DT,PRCP1,ZSOIL,
      &                 SH2O,SLOPE,KDT,FRZFACT,
@@ -2757,7 +2768,15 @@ CBL Enumerate the intermediate term ETA1 , so as to allow for proper
 CBL units forET efficiency computation (ETA/ETP)and as well, correct
 CBL unit conversion in SFLX KG M-2 S-1
 
+      if (prflag==1) then
+      write(*,*)'after smflx_sac: eta1',eta1
+      endif
+
            ETA1 = EDIR1 + ETT1 + EC1
+
+      if (prflag==1) then
+      write(*,*)'edir1,ett1,ec1',edir1,ett1,ec1
+      endif
 
 C ----------------------------------------------------------------------
 C       CONVERT MODELED EVAPOTRANSPIRATION FM  M S-1  TO  KG M-2 S-1
@@ -2853,6 +2872,7 @@ c        ET(2) = ET1(2).0
 c        ET(3) = ET1(3).0
 c        ET(4) = ET1(4).0
         ETT = ETT + ET1(K)
+
       ENDDO
 C ----------------------------------------------------------------------
       if (prflag==1) then
@@ -2893,6 +2913,7 @@ CMS        write(*,*)'nopac beta eta etp',beta,eta0,etp
       ENDIF
       if (prflag==1) then
       write(*,*)'nopac beta eta etp',beta,eta,etp
+      write(*,*)'eta eta0',eta,eta0
       endif
 
 C ----------------------------------------------------------------------
@@ -8425,18 +8446,22 @@ chelin      IF (DENOM .LE. 0.0) DENOM = 1.
 chelin      DO I = 1,NROOT
 chelin        ET1(I) = ETP1A * GX(I) / DENOM
 chelin      END DO
-C seasonal factor for reduced root water uptake
-C calculate root zone soil temp
        STCRT=0
        DSTCRT=0
+      if(prflag==1)write(*,*)'NROOT',NROOT
       DO K=1,NROOT
+      if(prflag==1)write(*,*)'STCRT,DSTCRT,K',STCRT,DSTCRT,K
        STCRT=STCRT+ZSOIL(K)*STC(K)
        DSTCRT=DSTCRT+ZSOIL(K)
+      if(prflag==1)write(*,*)'STCRT,DSTCRT,ZSOIL(K),STC(K)'
+      if(prflag==1)write(*,*)STCRT,DSTCRT,ZSOIL(K),STC(K)
       ENDDO
-       STCRT=STCRT/DSTCRT
 
+      STCRT=STCRT/DSTCRT
+      if(prflag==1)write(*,*)'STCRT',STCRT
         DO K = 1,NROOT
          GTX(K)= MAX(0.0,1.-0.0016* MAX(298.- STCRT,0.0)**2)
+         if(prflag==1)write(*,*)'K,GTX(K)',K,GTX(K)
         ENDDO
 
 C ----------------------------------------------------------------------
@@ -9364,7 +9389,7 @@ cbl        write(*,*)'rtdis',i,rtdis(i)
 
 cbl2014 The below does not get used, since it only modifies 
 cbl2014 RTDIS1, whereas RTDIS is the returned quantity
-      if (model_type==1) then
+      if (model_type==1 .and. model_type==0) then
          RMAX = RMAX_DATA(VEGTYP)
          CROOT = CROOT_DATA(VEGTYP)
          D50 = D50_DATA(VEGTYP)
