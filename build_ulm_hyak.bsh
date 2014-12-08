@@ -9,8 +9,10 @@ module load git_1.8.2.3
 mkdir obj
 rm obj/*
 
+
+
 ## pfg90 versus ifort
-#sed -i 's/IX/1x/g' physics/sac2frz1.f
+sed -i 's/IX/1x/g' physics/sac2frz1.f
 
 ### Deprecated (now use host specific makefile)
 ## get driver/driverMod.f90
@@ -18,5 +20,7 @@ rm obj/*
 ## appropriate makefile
 #cp /gscratch/hydro/mrstu/makefile.hyak makefile
 #make > log_build_ulm.txt 2>&1
+
+cp driver/driverMod.hyak.f90 driver/driverMod.f90
 
 make -f makefile.hyak.mk > log_build_ulm.txt 2>&1
