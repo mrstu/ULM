@@ -113,6 +113,7 @@ MODULE driverMod
   INTEGER :: MONTH_FINAL
   INTEGER :: DAY_FINAL
   INTEGER :: ICE1
+  INTEGER :: SCRAPESNOW ! CMS added snow scraping on Sept 1.
   REAL    :: Z1
   CHARACTER(len=19) :: MODEL_START_TIME
 

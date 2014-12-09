@@ -965,64 +965,81 @@ write(*,*)'xlen_initial',xlen_initial
        ENDIF
         DO J = 1, NBANDS
            IF (band_area(I,J) > 0) THEN
-              if(adimc_2d(i,j)<uztwc_2d(i,j)) adimc_2d(i,j)=uztwc_2d(i,j)
-! Store in state array
-              SACST(I,J,1) = UZTWC_2d(I,J)
-              SACST(I,J,2) = UZFWC_2d(I,J)
-              SACST(I,J,3) = LZTWC_2d(I,J)
-              SACST(I,J,4) = LZFSC_2d(I,J)
-              SACST(I,J,5) = LZFPC_2d(I,J)
-              SACST(I,J,6) = ADIMC_2d(I,J)
-! Need to rewrite frozen state allocation, once the indices are sorted out
-! (i.e. the SAC-HT code is hard-coded to 5 physical layers
-              FRZST(I,J,1) = TBOT(I)
-              FRZST(I,J,2) = TBOT(I)
-              FRZST(I,J,3) = TBOT(I)
-              FRZST(I,J,4) = TBOT(I)
-              FRZST(I,J,5) = 0
-              FRZST(I,J,6) = SACST(I,J,1)
-              FRZST(I,J,7) = SACST(I,J,2)
-              FRZST(I,J,8) = SACST(I,J,3)
-              FRZST(I,J,9) = SACST(I,J,4)
-              FRZST(I,J,10)= SACST(I,J,5)
-              IF(prflag==1) THEN
-                 write(*,*)'swlt',smcwlt(I)
-              endif
-              DO K = 1,MAXNSOIL
-! Divide SAC SMC's by 1000 (to get meters) and by respective layer 
-! depths to keep as a voumetric frac, add SMCWLT as bottom boundary
-                 IF (MODEL_TYPE == 1 .OR. MODEL_TYPE == 3) THEN
-                    IF (K.LE.NUP) THEN
-                       SMC(I,J,K) = ((SACST(I,J,1) + SACST(I,J,2))/1000.)/(SOILDEPTH(I,1)+SOILDEPTH(I,2)) + SMCWLT(I)
-                    ELSE
-                       SMC(I,J,K) = ((SACST(I,J,3) + SACST(I,J,4) + SACST(I,J,5))/1000.)/(SOILDEPTH(I,3)+SOILDEPTH(I,4)) + SMCWLT(I)
-                    ENDIF
-! **Important** Assume warm-season start-up, no frozen soil yet
-                    SH2O(I,J,K) = SMC(I,J,K)
-                    if(prflag==1) then
-                       write(*,*)'smc',K,smc(i,j,k)
-                    endif
-                 ELSE
-                    SMC(I,J,K)  = MAXSMC(SOILTYP(I)) * FLIMIT(SOILTYP(I))
-                    SH2O(I,J,K) = SMC(I,J,K)
-                 END IF
-                 STC(I,J,K)  = TBOT(I)
-              END DO
-              if (prflag==1) then
-                 do q = 1,5
-                    write(*,*)'sacst',q,sacst(i,j,q)
-                 enddo
-              endif
-              DO NL = 1,MAXNSNOW             
-                 DSNOW(I,J,NL)    = 0.0
-                 PSNOW(I,J,NL)    = 0.0
-                 RTTSNOW(I,J,NL)  = 0.0
-                 RTTDTSNOW(I,J,NL)= 0.0
-                 WTSNOW(I,J,NL)   = 0.0
-                 WTDTSNOW(I,J,NL) = 0.0
-                 TTSNOW(I,J,NL)   = 0.0
-                 TTDTSNOW(I,J,NL) = 0.0          
-              END DO
+
+                ! CMS -- state file was getting clobbered so removed for this layerdef=true/model_type=1
+                IF (LAYERDEF.EQ..TRUE..AND.MODEL_TYPE.EQ.1) THEN
+
+                  DO NL = 1,MAXNSNOW
+                     DSNOW(I,J,NL)    = 0.0
+                     PSNOW(I,J,NL)    = 0.0
+                     RTTSNOW(I,J,NL)  = 0.0
+                     RTTDTSNOW(I,J,NL)= 0.0
+                     WTSNOW(I,J,NL)   = 0.0
+                     WTDTSNOW(I,J,NL) = 0.0
+                     TTSNOW(I,J,NL)   = 0.0
+                     TTDTSNOW(I,J,NL) = 0.0
+                  END DO
+
+                ELSE
+                  if(adimc_2d(i,j)<uztwc_2d(i,j)) adimc_2d(i,j)=uztwc_2d(i,j)
+                    ! Store in state array
+                    SACST(I,J,1) = UZTWC_2d(I,J)
+                    SACST(I,J,2) = UZFWC_2d(I,J)
+                    SACST(I,J,3) = LZTWC_2d(I,J)
+                    SACST(I,J,4) = LZFSC_2d(I,J)
+                    SACST(I,J,5) = LZFPC_2d(I,J)
+                    SACST(I,J,6) = ADIMC_2d(I,J)
+                    ! Need to rewrite frozen state allocation, once the indices are sorted out
+                    ! (i.e. the SAC-HT code is hard-coded to 5 physical layers
+                    FRZST(I,J,1) = TBOT(I)
+                    FRZST(I,J,2) = TBOT(I)
+                    FRZST(I,J,3) = TBOT(I)
+                    FRZST(I,J,4) = TBOT(I)
+                    FRZST(I,J,5) = 0
+                    FRZST(I,J,6) = SACST(I,J,1)
+                    FRZST(I,J,7) = SACST(I,J,2)
+                    FRZST(I,J,8) = SACST(I,J,3)
+                    FRZST(I,J,9) = SACST(I,J,4)
+                    FRZST(I,J,10)= SACST(I,J,5)
+                  IF(prflag==1) THEN
+                     write(*,*)'swlt',smcwlt(I)
+                  endif
+                  DO K = 1,MAXNSOIL
+    ! Divide SAC SMC's by 1000 (to get meters) and by respective layer
+    ! depths to keep as a voumetric frac, add SMCWLT as bottom boundary
+                     IF (MODEL_TYPE == 1 .OR. MODEL_TYPE == 3) THEN
+                        IF (K.LE.NUP) THEN
+                           SMC(I,J,K) = ((SACST(I,J,1) + SACST(I,J,2))/1000.)/(SOILDEPTH(I,1)+SOILDEPTH(I,2)) + SMCWLT(I)
+                        ELSE
+                           SMC(I,J,K) = ((SACST(I,J,3) + SACST(I,J,4) + SACST(I,J,5))/1000.)/(SOILDEPTH(I,3)+SOILDEPTH(I,4)) + SMCWLT(I)
+                        ENDIF
+    ! **Important** Assume warm-season start-up, no frozen soil yet
+                        SH2O(I,J,K) = SMC(I,J,K)
+                        if(prflag==1) then
+                           write(*,*)'smc',K,smc(i,j,k)
+                        endif
+                     ELSE
+                        SMC(I,J,K)  = MAXSMC(SOILTYP(I)) * FLIMIT(SOILTYP(I))
+                        SH2O(I,J,K) = SMC(I,J,K)
+                     END IF
+                     STC(I,J,K)  = TBOT(I)
+                  END DO
+                  if (prflag==1) then
+                     do q = 1,5
+                        write(*,*)'sacst',q,sacst(i,j,q)
+                     enddo
+                  endif
+                  DO NL = 1,MAXNSNOW
+                     DSNOW(I,J,NL)    = 0.0
+                     PSNOW(I,J,NL)    = 0.0
+                     RTTSNOW(I,J,NL)  = 0.0
+                     RTTDTSNOW(I,J,NL)= 0.0
+                     WTSNOW(I,J,NL)   = 0.0
+                     WTDTSNOW(I,J,NL) = 0.0
+                     TTSNOW(I,J,NL)   = 0.0
+                     TTDTSNOW(I,J,NL) = 0.0
+                  END DO
+                ENDIF
            ELSE
               DO K = 1,MAXNSOIL
                  SMC(I,J,K)  = NODATA

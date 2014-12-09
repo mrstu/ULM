@@ -9389,6 +9389,8 @@ cbl        write(*,*)'rtdis',i,rtdis(i)
 
 cbl2014 The below does not get used, since it only modifies 
 cbl2014 RTDIS1, whereas RTDIS is the returned quantity
+CMS2014 Disabled this with impossible model_type criterion b/c
+CMS2014 so that NROOT=0 is avoided.
       if (model_type==1 .and. model_type==0) then
          RMAX = RMAX_DATA(VEGTYP)
          CROOT = CROOT_DATA(VEGTYP)

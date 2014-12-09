@@ -616,11 +616,25 @@ PROGRAM noah
                END DO
                SOILMOIST_save_band = SOILMOIST_total_band
 
-               ! ADDED (MRS 20140613): snow scraping
-!               if (month .EQ. 9 .AND. day .EQ. 1) then
-!                  SNEQV(I,J)=0.
-!                  PACH20(I,J)=0.
-!               endif
+
+               ! CMS ADDED (MRS 20140613): snow scraping
+               ! CMS ADDED (MRS 20140613): updated as control file option
+               if ( SCRAPESNOW .EQ. 1 ) then
+                   if (month .EQ. 9 .AND. day .EQ. 1 .AND. hour .EQ. 0 .AND. SNEQV(I,J) .GT. 0.) then
+                      ! critical
+                      SNEQV(I,J)  = 0.0
+                      PACH20(I,J) = 0.0
+                      ! emulating read_initial(), possibly redundant with SFLXALL
+                      SNOWH(I,J)  = 0.0
+                      SNCOVR(I,J) = 0.0
+                      LSTSNW(I,J) = 0
+                      TPACK(I,J)  = 273.15
+                      ! Exchange coefficients: unclear if these need to be reset.
+                      ! physics>SFLXALL_SRC.{SFCDIF,etc.}
+                      ! CH(I,J)     = 1.0e-4 ! from read_initial()
+                      ! CM(I,J)     = 1.0e-4 ! from read_initial()
+                   endif
+               endif
                ! END ADDED
 
                SWE_band = SNEQV(I,J)*1000.0
