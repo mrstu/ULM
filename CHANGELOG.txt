@@ -1,0 +1,12 @@
+
+20141209
+--------
+
+* Reduced number of output variables for purpose of Integrated Scenarios production.  
+  See driver/{OPEN,WRITE}_OUTPUT.f90.ISprod.
+* Added default Sept-1:00h snow scraping that can be overrode by control file SCRAPESNOW=0.
+* Recent change to driver/READ_INITIAL.f90 so that initial state file is read correctly.
+  Stripped out Livneh code that assumed warm restart (neglected frozen soils).
+* Recent change to physics/SFLXALL_SRC.f>REDPRM() that isolated/quarantined code block 
+  near end that set NROOT=0 which garbled TRANSP() and others.
+

@@ -166,8 +166,10 @@ obj/OPEN_FORCING.o: driver/OPEN_FORCING.f90 obj/driverMod.o
 obj/OPEN_RESTART.o: driver/OPEN_RESTART.f90 obj/driverMod.o
 	$(COMPILER) $(FFLAGS) driver/OPEN_RESTART.f90 -o obj/OPEN_RESTART.o
 
-obj/OPEN_OUTPUT.o: driver/OPEN_OUTPUT.f90 obj/driverMod.o
-	$(COMPILER) $(FFLAGS) driver/OPEN_OUTPUT.f90 -o obj/OPEN_OUTPUT.o
+obj/OPEN_OUTPUT.o: driver/OPEN_OUTPUT.f90.ISprod obj/driverMod.o
+	$(COMPILER) $(FFLAGS) driver/OPEN_OUTPUT.f90.ISprod -o obj/OPEN_OUTPUT.o
+#obj/OPEN_OUTPUT.o: driver/OPEN_OUTPUT.f90 obj/driverMod.o
+#	$(COMPILER) $(FFLAGS) driver/OPEN_OUTPUT.f90 -o obj/OPEN_OUTPUT.o
 
 obj/INTERP_MONTHLY.o: driver/INTERP_MONTHLY.f90 obj/driverMod.o
 	$(COMPILER) $(FFLAGS) driver/INTERP_MONTHLY.f90 -o obj/INTERP_MONTHLY.o
@@ -211,8 +213,10 @@ obj/DQSDT.o: driver/DQSDT.f
 obj/SFLXALL_SRC.o: physics/SFLXALL_SRC.f
 	$(COMPILER) $(FFLAGS) physics/SFLXALL_SRC.f -o obj/SFLXALL_SRC.o
 
-obj/WRITE_OUTPUT.o: driver/WRITE_OUTPUT.f90 obj/driverMod.o
-	$(COMPILER) $(FFLAGS) driver/WRITE_OUTPUT.f90 -o obj/WRITE_OUTPUT.o
+obj/WRITE_OUTPUT.o: driver/WRITE_OUTPUT.f90.ISprod obj/driverMod.o
+	$(COMPILER) $(FFLAGS) driver/WRITE_OUTPUT.f90.ISprod -o obj/WRITE_OUTPUT.o
+#obj/WRITE_OUTPUT.o: driver/WRITE_OUTPUT.f90 obj/driverMod.o
+#	$(COMPILER) $(FFLAGS) driver/WRITE_OUTPUT.f90 -o obj/WRITE_OUTPUT.o
 
 obj/WRITE_PE.o: driver/WRITE_PE.f90 obj/driverMod.o
 	$(COMPILER) $(FFLAGS) driver/WRITE_PE.f90 -o obj/WRITE_PE.o
