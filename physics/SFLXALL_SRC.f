@@ -1301,8 +1301,10 @@ C  ----------------- COEF is adjustable parameter --------------------
       INTEGER LSTSNW1,LSTSNW
       LOGICAL SNOWNG
 
-C      PARAMETER (COEF=0.5)
-      PARAMETER (COEF=1.0)
+C MRS20150305: personal comm from Ben Livneh. 0.5 is half the differnce
+C MRS20150305: between satellite and decay function
+      PARAMETER (COEF=0.5)
+C      PARAMETER (COEF=1.0)
       PARAMETER
      &     (SNACCA=0.94,SNACCB=0.58,SNTHWA=0.82,SNTHWB=0.46)
       PARAMETER (MINALB=0.4)

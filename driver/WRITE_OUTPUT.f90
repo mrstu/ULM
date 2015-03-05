@@ -193,6 +193,10 @@ SUBROUTINE WRITE_OUTPUT(OUTPUT_STEP)
       L = L + 1
       CALL WRITE_OUT_VAR(OUT_NCIDS(K),VARIDS(K,L),OUTPUT_STEP,CanopInt,2,COMP_OUTPUT,LBAND)
 
+      L = L + 1
+      CALL WRITE_OUT_VAR(OUT_NCIDS(K),VARIDS(K,L),OUTPUT_STEP,Albedo_ALMA,2,COMP_OUTPUT,LBAND)
+
+
 ! ************** END SW MONITOR HACK - extra vars for "wb" file ***********************
 
     ELSE IF (K == 3) THEN

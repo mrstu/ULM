@@ -427,6 +427,13 @@ SUBROUTINE OPEN_OUTPUT()
       status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
       status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
+      L = L + 1
+      status = NF_DEF_VAR(OUT_NCIDS(K),'Albedo',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
+      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',1,'-')
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
+
+
 ! ************** END SW MONITOR HACK - extra vars for "wb" file ***********************
 
     ELSE IF (K == 3) THEN
