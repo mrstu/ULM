@@ -668,13 +668,13 @@ C ----------------------------------------------------------------------
 
 C Noah default albedo algorithm
 
-            CALL ALCALC (ALB1,SNOALB,SHDFAC,SHDMIN,SNCOVR,TSNOW,ALBEDO)
+C            CALL ALCALC (ALB1,SNOALB,SHDFAC,SHDMIN,SNCOVR,TSNOW,ALBEDO)
 C ----------------------------------------------------------------------
 C Ben Livneh 2007; Alternate albedo scheme, considering a higher initial
 C albedo, with an exponential decay function
 
-C       CALL ALBCPU (ALB1,SNOALB,SHDFAC,SHDMIN,SNCOVR,TSNOW,ALBEDO,
-C     &           SNOWNG,TFREEZ,DT,SNEQV,T1,LSTSNW1,VEGTYP,psnow1,prflag)
+       CALL ALBCPU (ALB1,SNOALB,SHDFAC,SHDMIN,SNCOVR,TSNOW,ALBEDO,
+     &           SNOWNG,TFREEZ,DT,SNEQV,T1,LSTSNW1,VEGTYP,psnow1,prflag)
 
 C ----------------------------------------------------------------------
          ENDIF
