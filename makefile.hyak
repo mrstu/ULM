@@ -1,4 +1,4 @@
-# Makefile for UW implementation of Unified Noah SAC models
+ # Makefile for UW implementation of Unified Noah SAC models
 # Author: Ben Livneh, blivneh@hydro.washington.edu
 # RCS Id string: $Id: makefile,v 1.2 2007/10/04 20:43:51 vicadmin Exp $
 
@@ -43,7 +43,6 @@ OBJS =  obj/driverMod.o \
 	obj/CLOSE_OUTPUT.o \
 	obj/CLOSE_FORCING.o \
 	obj/fland2.o \
-	obj/fland4.o \
 	obj/fst2sac1.o \
 	obj/fst2sac2.o \
 	obj/sac2frz1.o \
@@ -59,14 +58,14 @@ OBJS =  obj/driverMod.o \
 	obj/meta.o \
 	obj/nwsnow.o \
 	obj/obtain.o \
-	obj/pemb.o \
 	obj/snowot.o \
 	obj/snowtw.o \
 	obj/subs.o \
 	obj/surfac.o \
 	obj/vapor.o \
 	obj/water.o \
-	obj/windf.o 
+	obj/windf.o \
+	obj/pemb.o 
 
 # Tunable parameters 
 #
@@ -75,34 +74,42 @@ OBJS =  obj/driverMod.o \
 # LIBS		A list of libraries to use 
 # PROGRAM	Name of the executable
 
+
 #COMPILER = ifort -r8 -i4 -fp_port -align
-COMPILER = pgf90 -Mdalign -Mextend
-FFLAGS = -c -g
-## LIBS on tsunami
-#LIBS = -L$(LIB_NETCDF) -lnetcdf
-# LIBS on flood -- extra "f"
-LIBS = -L /usr/lib64 -lnetcdff
+#COMPILER = pgf90 -Mdalign -Mextend
+#COMPILER = ifort -r8 -i4 -fp_port -align -132 
+COMPILER = ifort -fp-port -132 
+#FFLAGS = -c -g 
+#FFLAGS = -c -g -convert big_endian
+FFLAGS = -c -g -convert big_endian
 
-HDRS = -I /usr/include
+#LIB_NETCDF = /sw/netcdf-4.3.1.1_icc-14.0.2_rh6/lib
+#INC_NETCDF = /sw/netcdf-4.3.1.1_icc-14.0.2_rh6/include
+#LIB_NETCDFF = /sw/netcdf-fortran-4.2_icc-14.0.2_rh6/lib
+#INC_NETCDFF = /sw/netcdf-fortran-4.2_icc-14.0.2_rh6/include
+#LIBS = -L$(LIB_NETCDFF) -lnetcdff
+#HDRS = -I$(INC_NETCDFF)
+#LIBS = -L$(LIB_NETCDFF) -lnetcdff
+#HDRS = -I$(INC_NETCDFF)
+
+LIB_NETCDF = /sw/netcdf-4.3.1.1_icc-14.0.2_rh6/lib
+INC_NETCDF = /sw/netcdf-4.3.1.1_icc-14.0.2_rh6/include
+LIB_NETCDFF = /sw/netcdf-fortran-4.2_icc-14.0.2_rh6/lib
+INC_NETCDFF = /sw/netcdf-fortran-4.2_icc-14.0.2_rh6/include
+LIBS = -L$(LIB_NETCDF) -L$(LIB_NETCDFF) -lnetcdff -lnetcdf
+HDRS = -I$(INC_NETCDF) -I$(INC_NETCDFF)
+##LIBS = -L$(LIB_NETCDF) -I$(INC_NETCDF)
+##LIBS = -L$(LIB_NETCDF) -Iinclude -Inetcdf -I$(INC_NETCDF)
+
 PROGRAM = ulm
-#PROGRAM = ulm.flood.full
-#PROGRAM = ulm.swm
-#PROGRAM = ulm.single
-#PROGRAM = ulmflood
-#PROGRAM = ulmfloodmaj
-#PROGRAM = ulmfloodmajcolo
-#PROGRAM = ulmfloodminorfull
-#PROGRAM = ulm.swm
-
-##tsunami: no additional flags needed
-LIBS2 = 
-#flood: two more flags needed after program name
-#LIBS2 = -lnetcdf -lcurl
+#PROGRAM = ulmhyakmajor
 #PROGRAM = ulm_test
 #PROGRAM = ulm_wcrit
 #PROGRAM = ulm_psnow
+#LIBS2  = -limf -lm
 
 $(PROGRAM): $(OBJS)
+#	$(COMPILER) $(OBJS) $(LIBS) $(HDRS) -o $(PROGRAM)
 	$(COMPILER) $(OBJS) $(LIBS) $(HDRS) -o $(PROGRAM) $(LIBS2)
 
 obj/driverMod.o: driver/driverMod.f90
@@ -234,9 +241,6 @@ obj/sac1.o: physics/sac1.f
 obj/fland2.o: physics/fland2.f
 	$(COMPILER) $(FFLAGS) physics/fland2.f -o obj/fland2.o
 
-obj/fland4.o: physics/fland4.f
-	$(COMPILER) $(FFLAGS) physics/fland4.f -o obj/fland4.o
-
 obj/fst2sac1.o: physics/fst2sac1.f
 	$(COMPILER) $(FFLAGS) physics/fst2sac1.f -o obj/fst2sac1.o
 
@@ -276,9 +280,6 @@ obj/nwsnow.o: physics/nwsnow.f
 obj/obtain.o: physics/obtain.f
 	$(COMPILER) $(FFLAGS) physics/obtain.f -o obj/obtain.o
 
-obj/pemb.o: physics/pemb.f
-	$(COMPILER) $(FFLAGS) physics/pemb.f -o obj/pemb.o
-
 obj/snowot.o: physics/snowot.f
 	$(COMPILER) $(FFLAGS) physics/snowot.f -o obj/snowot.o
 
@@ -299,3 +300,7 @@ obj/water.o: physics/water.f
 
 obj/windf.o: physics/windf.f
 	$(COMPILER) $(FFLAGS) physics/windf.f -o obj/windf.o
+
+obj/pemb.o: physics/pemb.f
+	$(COMPILER) $(FFLAGS) physics/pemb.f -o obj/pemb.o
+

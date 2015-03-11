@@ -43,7 +43,6 @@ OBJS =  obj/driverMod.o \
 	obj/CLOSE_OUTPUT.o \
 	obj/CLOSE_FORCING.o \
 	obj/fland2.o \
-	obj/fland4.o \
 	obj/fst2sac1.o \
 	obj/fst2sac2.o \
 	obj/sac2frz1.o \
@@ -81,9 +80,14 @@ FFLAGS = -c -g
 ## LIBS on tsunami
 #LIBS = -L$(LIB_NETCDF) -lnetcdf
 # LIBS on flood -- extra "f"
-LIBS = -L /usr/lib64 -lnetcdff
 
+#LIBS = -L /usr/local/lib -lnetcdff
+LIBS = -L /usr/lib64 -lnetcdff
 HDRS = -I /usr/include
+
+#LIBS = -L /usr/local/lib -lnetcdff
+#HDRS = -I /usr/local/include
+
 PROGRAM = ulm
 #PROGRAM = ulm.flood.full
 #PROGRAM = ulm.swm
@@ -105,8 +109,8 @@ LIBS2 =
 $(PROGRAM): $(OBJS)
 	$(COMPILER) $(OBJS) $(LIBS) $(HDRS) -o $(PROGRAM) $(LIBS2)
 
-obj/driverMod.o: driver/driverMod.f90
-	$(COMPILER) $(FFLAGS) driver/driverMod.f90 -o obj/driverMod.o
+obj/driverMod.o: driver/driverMod.hydra.f90
+	$(COMPILER) $(FFLAGS) driver/driverMod.hydra.f90 -o obj/driverMod.o
 
 obj/MAIN_DRIVER.o: driver/MAIN_DRIVER.f90 obj/driverMod.o
 	$(COMPILER) $(FFLAGS) driver/MAIN_DRIVER.f90 -o obj/MAIN_DRIVER.o
@@ -233,9 +237,6 @@ obj/sac1.o: physics/sac1.f
 
 obj/fland2.o: physics/fland2.f
 	$(COMPILER) $(FFLAGS) physics/fland2.f -o obj/fland2.o
-
-obj/fland4.o: physics/fland4.f
-	$(COMPILER) $(FFLAGS) physics/fland4.f -o obj/fland4.o
 
 obj/fst2sac1.o: physics/fst2sac1.f
 	$(COMPILER) $(FFLAGS) physics/fst2sac1.f -o obj/fst2sac1.o

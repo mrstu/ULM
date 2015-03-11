@@ -401,7 +401,7 @@ C Precipitation (mm) and type; if snow, compute density later (denns = 2)
       PXD = PRCP * DELTAT
       WRITE(*,*)'PXD TG TAD',PXD,TG,TAD
       WRITE(*,*)'EAD UA QID',EAD,UA,QID
-      IF (SNOWNG) THEN
+      IF (SNOWNG .EQ. .TRUE.) THEN
          DENNS = 2.0
       ELSE
          DENNS = 1.0

@@ -33,7 +33,7 @@ c8  Correction liquid water to be not less than swlt
          SLIQ=SLIQ+1000.*(SH2O(I)-SWLT)*DZ/RT
          s0 = 1000*(smc(i) - swlt) * dz/rt
          s1 = 1000 * (sh2o(i) - swlt) * dz/rt
-         if(prflag==1) write(*,"(IX,7(xf13.8))")i,stot,frost,sliq,s0,s1,
+         if(prflag==1) write(*,"(1x,7(xf13.8))")i,stot,frost,sliq,s0,s1,
      +        smc(i),sh2o(i)
          
       ENDDO

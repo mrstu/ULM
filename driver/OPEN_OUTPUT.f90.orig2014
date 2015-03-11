@@ -264,41 +264,41 @@ SUBROUTINE OPEN_OUTPUT()
       status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
       status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
-!      L = L + 1
-!      status = NF_DEF_VAR(OUT_NCIDS(K),'Qfz',NF_REAL,ndims_2d,outdim_2d,VARIDS(K,L))
-!      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',7,'kg/m^2s')
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
+      L = L + 1
+      status = NF_DEF_VAR(OUT_NCIDS(K),'Qfz',NF_REAL,ndims_2d,outdim_2d,VARIDS(K,L))
+      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',7,'kg/m^2s')
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
-!      L = L + 1
-!      status = NF_DEF_VAR(OUT_NCIDS(K),'Qst',NF_REAL,ndims_2d,outdim_2d,VARIDS(K,L))
-!      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',7,'kg/m^2s')
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
+      L = L + 1
+      status = NF_DEF_VAR(OUT_NCIDS(K),'Qst',NF_REAL,ndims_2d,outdim_2d,VARIDS(K,L))
+      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',7,'kg/m^2s')
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
-!      L = L + 1
-!      status = NF_DEF_VAR(OUT_NCIDS(K),'DelSoilMoist',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
-!      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',6, 'kg/m^2')
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
+      L = L + 1
+      status = NF_DEF_VAR(OUT_NCIDS(K),'DelSoilMoist',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
+      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',6, 'kg/m^2')
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
-!      L = L + 1
-!      status = NF_DEF_VAR(OUT_NCIDS(K),'DelSWE',NF_REAL,ndims_2d,outdim_2d,VARIDS(K,L))
-!      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',6,'kg/m^2')
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
+      L = L + 1
+      status = NF_DEF_VAR(OUT_NCIDS(K),'DelSWE',NF_REAL,ndims_2d,outdim_2d,VARIDS(K,L))
+      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',6,'kg/m^2')
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
-!      L = L + 1
-!      status = NF_DEF_VAR(OUT_NCIDS(K),'DelSurfStor',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
-!      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',6, 'kg/m^2')
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
+      L = L + 1
+      status = NF_DEF_VAR(OUT_NCIDS(K),'DelSurfStor',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
+      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',6, 'kg/m^2')
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
-!      L = L + 1
-!      status = NF_DEF_VAR(OUT_NCIDS(K),'DelIntercept',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
-!      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',6,'kg/m^2')
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
+      L = L + 1
+      status = NF_DEF_VAR(OUT_NCIDS(K),'DelIntercept',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
+      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',6,'kg/m^2')
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
 ! ************** SW MONITOR HACK - extra vars for "wb" file ***********************
       L = L + 1
@@ -319,11 +319,11 @@ SUBROUTINE OPEN_OUTPUT()
       status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
       status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
-!     L = L + 1
-!      status = NF_DEF_VAR(OUT_NCIDS(K),'SOILDEPTH',NF_REAL,ndims_3d,outdim_3d, VARIDS(K,L))
-!      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',2,'mm')
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
+      L = L + 1
+      status = NF_DEF_VAR(OUT_NCIDS(K),'SOILDEPTH',NF_REAL,ndims_3d,outdim_3d, VARIDS(K,L))
+      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',2,'mm')
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
       L = L + 1
       status = NF_DEF_VAR(OUT_NCIDS(K),'SoilTemp',NF_REAL,ndims_3d,outdim_3d, VARIDS(K,L))
@@ -337,11 +337,11 @@ SUBROUTINE OPEN_OUTPUT()
       status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
       status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
-!      L = L + 1
-!      status = NF_DEF_VAR(OUT_NCIDS(K),'SMFrozFrac',NF_REAL,ndims_3d,outdim_3d, VARIDS(K,L))
-!      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',1,'-')
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
+      L = L + 1
+      status = NF_DEF_VAR(OUT_NCIDS(K),'SMFrozFrac',NF_REAL,ndims_3d,outdim_3d, VARIDS(K,L))
+      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',1,'-')
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
       L = L + 1
       status = NF_DEF_VAR(OUT_NCIDS(K),'ECanop',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
@@ -403,36 +403,29 @@ SUBROUTINE OPEN_OUTPUT()
       status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
       status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
       
-!      L = L + 1
-!      status = NF_DEF_VAR(OUT_NCIDS(K),'SatSoil',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
-!      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',1,'-')
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
+      L = L + 1
+      status = NF_DEF_VAR(OUT_NCIDS(K),'SatSoil',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
+      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',1,'-')
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
-!      L = L + 1
-!      status = NF_DEF_VAR(OUT_NCIDS(K),'WltSoil',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
-!      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',1,'-')
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
+      L = L + 1
+      status = NF_DEF_VAR(OUT_NCIDS(K),'WltSoil',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
+      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',1,'-')
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
-!      L = L + 1
-!      status = NF_DEF_VAR(OUT_NCIDS(K),'RootMoist',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
-!      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',6,'kg/m^2')
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
-!      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
+      L = L + 1
+      status = NF_DEF_VAR(OUT_NCIDS(K),'RootMoist',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
+      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',6,'kg/m^2')
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
+      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
 
       L = L + 1
       status = NF_DEF_VAR(OUT_NCIDS(K),'CanopInt',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
       status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',6,'kg/m^2')
       status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
       status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
-
-      L = L + 1
-      status = NF_DEF_VAR(OUT_NCIDS(K),'Albedo',NF_REAL,ndims_2d,outdim_2d, VARIDS(K,L))
-      status = NF_PUT_ATT_TEXT(OUT_NCIDS(K),VARIDS(K,L),'units',1,'-')
-      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'missing_value', NF_REAL,1,NODATA)
-      status = NF_PUT_ATT_REAL(OUT_NCIDS(K),VARIDS(K,L),'_FillValue', NF_REAL,1,NODATA)
-
 
 ! ************** END SW MONITOR HACK - extra vars for "wb" file ***********************
 

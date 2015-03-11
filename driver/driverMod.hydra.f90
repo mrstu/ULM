@@ -25,8 +25,8 @@ MODULE driverMod
 !  include '/usr/local/i386/include/netcdf.inc'
 !  include '$INC_NETCDF/netcdf.inc'
 !  include '/usr/include/netcdf-3/netcdf.inc'
-!  include '/usr/include/netcdf.inc'
-  include '/sw/netcdf-fortran-4.2_icc-14.0.2_rh6/include/netcdf.inc'
+  include '/usr/include/netcdf.inc'
+!  include '/sw/netcdf-fortran-4.2_icc-14.0.2_rh6/include/netcdf.inc'
 
   ! Model constants
   REAL, PARAMETER :: TFREEZ=273.15
@@ -113,7 +113,7 @@ MODULE driverMod
   INTEGER :: MONTH_FINAL
   INTEGER :: DAY_FINAL
   INTEGER :: ICE1
-  INTEGER :: SCRAPESNOW=1 ! CMS added default snow scraping on Sept 1.
+  INTEGER :: SCRAPESNOW=1 ! CMS added snow scraping on Sept 1.
   REAL    :: Z1
   CHARACTER(len=19) :: MODEL_START_TIME
 
