@@ -64,8 +64,10 @@ SUBROUTINE READ_SNOWBANDS()
     !   If (total_area < 1) check not needed for avg_elev b/c it is normalized by total_area
     avg_elev = avg_elev / total_area
     ! arbitrary small difference threshold between cell/band sourced avg elevation, 5 meters.
-    IF (ABS(avg_elev - ELEV_2d(I)) > 5) THEN
-        ELEV_2d(I)=avg_elev
+    IF (ABS(avg_elev - ELEV_2d(I)) > 0.1) THEN
+        write(*,'Cell elevation (f5.3) not equal to weighted band average elevation (f5.3)')ELEV_2d(I),avg_elev
+        STOP 12
+    !    ELEV_2d(I)=avg_elev
     END IF
 
     ! MRS20150310: end enhancement
