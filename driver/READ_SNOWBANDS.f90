@@ -66,7 +66,7 @@ SUBROUTINE READ_SNOWBANDS()
     ! arbitrary small difference threshold between cell/band sourced avg elevation, 5 meters.
     IF (ABS(avg_elev - ELEV_2d(I)) > 0.1) THEN
         write(*,'("Error: cell elevation not equal to band averaged elevation")')
-        write(*,'("Cell elevation:",f10.2)')ELEV_2d(I)
+        write(*,'("Cell elevation, id:",f10.2,i2)')ELEV_2d(I),I
         write(*,'("Band average elevation:",f10.2)')avg_elev
         band_elev_sum = 0
         write(*,'("Band <2 bandnum>: <3 band_area>, <4 band_elev_wgt>, <5 band_elev>, <6-7 lapse band rel {bands,cell} average>, <8-9 height diff band-{band_avg, cell_avg}>)")')
