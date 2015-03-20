@@ -23,12 +23,9 @@ TB developed the driver code for Noah and Sac.-->
 
 ## Source
 
-```
 Land Surface Hydrology Group
 Department of Civil and Environmental Engineering
 University of Washington, Seattle, USA
-```
-
 
 ## History
 
