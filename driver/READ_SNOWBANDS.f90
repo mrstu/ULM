@@ -94,8 +94,8 @@ SUBROUTINE READ_SNOWBANDS()
       ELSE
         Tfactor(I,J) = 0
       END IF
-      total_area = total_area + band_area(I,J)
-      total_prec = total_prec + band_prec(I,J)
+!      total_area = total_area + band_area(I,J)
+!      total_prec = total_prec + band_prec(I,J)
     END DO
 
 
