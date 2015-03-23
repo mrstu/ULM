@@ -83,7 +83,7 @@ SUBROUTINE READ_SNOWBANDS()
         ! write(*,'("Band ",i2,": ",f8.2,f8.2,f8.2,f8.2,f8.2)')J,band_elev(I,J),band_area(I,J),band_elev_wgt,band_elev_sum, band_elev_sum-ELEV_2d(I), band_elev_sum-ELEV_2d(I)
         ! write(*,'("Cell elevation (",f8.2,") not equal to weighted band average elevation (",f8.2,")")')ELEV_2d(I),avg_elev
         write(*,'("Now exiting with signal 12")')
-        #STOP 12
+        !STOP 12
     !    ELEV_2d(I)=avg_elev
     END IF
 
