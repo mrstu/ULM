@@ -522,6 +522,8 @@ PROGRAM noah
         ! make timestamp
         WRITE(datetime,'("date-",i4.4,i2.2,i2.2,i2.2,i2.2)')year,month,day,hour
 !        if (icell2dump.GE.1 .AND. I.EQ.icell2dump) THEN
+        write(1,*)'I,',I,', datetime,',year,month,day,hour
+
         if (prflag==1) THEN
         ! write(1,*)'I,',I,', datetime,',year,month,day,hour
         FID=1
@@ -1085,7 +1087,18 @@ PROGRAM noah
                Albedo_ALMA(I) = Albedo_ALMA(I) + ALB_TOT_band*band_area(I,J)
                ! BL2014 --> Need multiply incremental SWE, SNEQV(I,J), by it's fractional 
                ! coverage, SNCOVR(I,J), to preserve the water balance
+
+               write(*,*)'XXinfo (I-land,J-band)=',I,J
+               if (SNEQV(I,J) > 0.) then
+                   write(*,*)'XXSWE(I) =',SWE(I),SNEQV(I,J),band_area(I,J),SNCOVR(I,J)
+               endif
+
                SWE(I) = SWE(I) + SNEQV(I,J)*1000.0*band_area(I,J)
+
+               if (SNEQV(I,J) > 0.) then
+                   write(*,*)'XXSWE(I) =',SWE(I),SNEQV(I,J),band_area(I,J),SNCOVR(I,J)
+               endif
+
 !               SWE(I) = SWE(I) + SNEQV(I,J)*1000.0*band_area(I,J)*SNCOVR(I,J)
                if (prflag==1)write(*,*)'XXSWE(I) =',SWE(I),SNEQV(I,J),band_area(I,J),SNCOVR(I,J)
                if (prflag==1)write(*,*)'xxswe(i)',(SNEQV(I,J)*1000.0*band_area(I,J)*SNCOVR(I,J))
