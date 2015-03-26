@@ -564,7 +564,7 @@ PROGRAM noah
                DT_PRCP_band = Pfactor(I,J)*DT_PRCP(I)
                DT_TAIR_band = Tfactor(I,J)+DT_TAIR(I)
                !            write(*,*)'prcp_init',DT_PRCP(I),Pfactor(I,J)
-               ! Determine precip tyep
+               ! Determine precip type
                FFROZP = 0.0
                IF (DT_PRCP_band .GT. 0.0) THEN
                   IF (DT_TAIR_band .LE. TFREEZ) THEN

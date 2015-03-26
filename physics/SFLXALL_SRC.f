@@ -589,7 +589,9 @@ cbl --> PRCP1 goes to soil surface
       END IF
 cbl2014      IF ( (SNOWNG) .OR. (FRZGRA) ) THEN
 cbl2014      IF ( (SNOWNG.eq..true.) .OR. (FRZGRA.eq..true.) ) THEN
-      IF(SNOWNG.eq..true. .OR. FRZGRA.eq..true. .or.(SNEQV.gt.0.)) THEN
+cMRS20150326 reinstate prior conditional b/c of lowland snow
+      IF ( (SNOWNG.eq..true.) .OR. (FRZGRA.eq..true.) ) THEN
+cMRS20150326      IF(SNOWNG.eq..true. .OR. FRZGRA.eq..true. .or.(SNEQV.gt.0.)) THEN
          if(prflag==1)write(*,*)'SNOWNG or FRZGRA: SNEQV incremented'
         SN_NEW = PRCP * DT * 0.001
         if(prflag==1)write(*,*)'SN_NEW pre-SNEQV',SN_NEW,SNEQV
